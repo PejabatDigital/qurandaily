@@ -22,15 +22,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Keeps session/user in sync for every future auth event (token refresh,
+    // the SIGNED_IN event that signInAnonymously() itself triggers below,
+    // etc). It must NOT touch `loading` — onAuthStateChange fires an initial
+    // event with session:null almost immediately, well before the bootstrap
+    // below finishes, and clearing `loading` on that event let ProtectedRoute
+    // render children with no user yet. `user` would then flip from null to
+    // the real anonymous user while already mounted, and downstream query
+    // state (enabled: !!user) would flip with it — a false->true->false
+    // isLoading flicker in Index.tsx that hit its full-skeleton early return
+    // and unmounted everything below it, wiping in-progress onboarding input.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        setLoading(false);
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // `loading` is only ever cleared here, once, after we know for certain
+    // whether there's an existing session or the anonymous sign-in attempt
+    // has finished (success or failure).
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
         setSession(session);
         setUser(session.user);
@@ -38,17 +50,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
       // No session yet on this device — open a silent anonymous one so the
-      // app never shows a sign-in screen. onAuthStateChange above will also
-      // fire once this resolves.
-      supabase.auth.signInAnonymously().then(({ data, error }) => {
-        if (error) {
-          setLoading(false);
-          return;
-        }
+      // app never shows a sign-in screen.
+      const { data, error } = await supabase.auth.signInAnonymously();
+      if (!error) {
         setSession(data.session);
         setUser(data.user);
-        setLoading(false);
-      });
+      }
+      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
