@@ -1,3 +1,7 @@
+-- Quran Daily: initial schema
+-- Auth is anonymous-only (no email/password) — every visitor gets their own
+-- Supabase user via supabase.auth.signInAnonymously() on first load, so
+-- auth.uid() is always populated once a session exists.
 
 -- Create profiles table
 CREATE TABLE public.profiles (
@@ -5,6 +9,7 @@ CREATE TABLE public.profiles (
   user_id UUID NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
   display_name TEXT,
   avatar_url TEXT,
+  timezone TEXT,
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
   updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
@@ -65,12 +70,12 @@ $$ LANGUAGE plpgsql SET search_path = public;
 CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON public.profiles FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER update_campaigns_updated_at BEFORE UPDATE ON public.campaigns FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
--- Auto-create profile on signup
+-- Auto-create profile whenever a new (anonymous) auth user is created
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
   INSERT INTO public.profiles (user_id, display_name)
-  VALUES (NEW.id, COALESCE(NEW.raw_user_meta_data->>'display_name', NEW.email));
+  VALUES (NEW.id, NULL);
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;

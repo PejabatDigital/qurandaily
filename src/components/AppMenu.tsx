@@ -8,8 +8,7 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { User, BookMarked, History, LogOut, Info, CalendarDays } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+import { User, BookMarked, History, Info, CalendarDays } from "lucide-react";
 import AboutDialog from "@/components/AboutDialog";
 
 interface AppMenuProps {
@@ -19,7 +18,6 @@ interface AppMenuProps {
 
 const AppMenu = ({ open, onOpenChange }: AppMenuProps) => {
   const navigate = useNavigate();
-  const { signOut } = useAuth();
   const [aboutOpen, setAboutOpen] = useState(false);
 
   const go = (path: string) => {
@@ -59,11 +57,6 @@ const AppMenu = ({ open, onOpenChange }: AppMenuProps) => {
               <Info className="h-4 w-4" /> About
             </Button>
           </nav>
-          <div className="mt-auto border-t p-3">
-            <Button variant="ghost" className="w-full justify-start gap-3 text-destructive" onClick={signOut}>
-              <LogOut className="h-4 w-4" /> Sign Out
-            </Button>
-          </div>
         </SheetContent>
       </Sheet>
       <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />

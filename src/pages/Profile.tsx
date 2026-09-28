@@ -27,7 +27,7 @@ const TIMEZONES = [
 ];
 
 const Profile = () => {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [displayName, setDisplayName] = useState("");
@@ -76,16 +76,11 @@ const Profile = () => {
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
             <User className="h-8 w-8 text-primary" />
           </div>
-          <p className="text-sm text-muted-foreground">{user?.email}</p>
         </div>
 
         <Card>
           <CardContent className="p-4">
             <form onSubmit={handleSave} className="space-y-4">
-              <div className="space-y-2">
-                <Label>Email Address</Label>
-                <Input value={user?.email ?? ""} readOnly className="bg-muted" />
-              </div>
               <div className="space-y-2">
                 <Label>Display Name</Label>
                 <Input
@@ -115,10 +110,6 @@ const Profile = () => {
             </form>
           </CardContent>
         </Card>
-
-        <Button variant="outline" className="w-full" onClick={signOut}>
-          Sign Out
-        </Button>
       </main>
     </div>
   );
