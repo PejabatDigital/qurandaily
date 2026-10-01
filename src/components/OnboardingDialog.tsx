@@ -28,15 +28,27 @@ const OnboardingDialog = ({ open, onOpenChange, onComplete }: OnboardingDialogPr
   const [loading, setLoading] = useState(false);
 
   const handleStep1 = async () => {
-    if (!user || !session || !displayName.trim()) return;
+    if (!displayName.trim()) return;
+    if (!user || !session) {
+      toast({ title: "Error", description: "Your session isn't ready yet. Please try again.", variant: "destructive" });
+      return;
+    }
     setLoading(true);
-    await supabase.from("profiles").update({ display_name: displayName.trim() }).eq("user_id", user.id);
+    const { error } = await supabase.from("profiles").update({ display_name: displayName.trim() }).eq("user_id", user.id);
     setLoading(false);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
     setStep(2);
   };
 
   const handleStep2 = async () => {
-    if (!user || !session || !campaignTitle.trim() || !endDate) return;
+    if (!campaignTitle.trim() || !endDate) return;
+    if (!user || !session) {
+      toast({ title: "Error", description: "Your session isn't ready yet. Please try again.", variant: "destructive" });
+      return;
+    }
     setLoading(true);
     const startPage = getStartPageForSurah(startSurah);
     const endPage = getEndPageForSurah(endSurah);

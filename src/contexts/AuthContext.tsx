@@ -6,12 +6,14 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  error: string | null;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   session: null,
   loading: true,
+  error: null,
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -20,6 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Keeps session/user in sync for every future auth event (token refresh,
@@ -51,8 +54,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       // No session yet on this device — open a silent anonymous one so the
       // app never shows a sign-in screen.
-      const { data, error } = await supabase.auth.signInAnonymously();
-      if (!error) {
+      const { data, error: signInError } = await supabase.auth.signInAnonymously();
+      if (signInError) {
+        console.error("Anonymous sign-in failed:", signInError);
+        setError(signInError.message);
+      } else {
         setSession(data.session);
         setUser(data.user);
       }
@@ -63,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, session, loading }}>
+    <AuthContext.Provider value={{ user, session, loading, error }}>
       {children}
     </AuthContext.Provider>
   );

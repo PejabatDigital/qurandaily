@@ -111,8 +111,9 @@ const Index = () => {
   };
 
   const switchCampaign = async (campaignId: string) => {
+    if (!user) return;
     setSelectedCampaignId(campaignId);
-    await supabase.from("campaigns").update({ is_active: false }).eq("user_id", user!.id);
+    await supabase.from("campaigns").update({ is_active: false }).eq("user_id", user.id);
     await supabase.from("campaigns").update({ is_active: true }).eq("id", campaignId);
     queryClient.invalidateQueries({ queryKey: ["campaigns"] });
   };
