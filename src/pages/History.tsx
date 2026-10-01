@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 import { Tables } from "@/integrations/supabase/types";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -12,12 +11,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { getSurahForPage, TOTAL_PAGES } from "@/lib/quran-data";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import DeleteConfirmDialog from "@/components/DeleteConfirmDialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCampaigns } from "@/hooks/useCampaigns";
+import { useReadingLogs } from "@/hooks/useReadingLogs";
 
 const History = () => {
-  const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -29,29 +29,8 @@ const History = () => {
   const [loading, setLoading] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const { data: logs = [], isLoading: logsLoading } = useQuery({
-    queryKey: ["reading_logs", user?.id],
-    queryFn: async () => {
-      if (!user) return [];
-      const { data } = await supabase
-        .from("reading_logs")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-      return data || [];
-    },
-    enabled: !!user,
-  });
-
-  const { data: campaigns = [] } = useQuery({
-    queryKey: ["campaigns", user?.id],
-    queryFn: async () => {
-      if (!user) return [];
-      const { data } = await supabase.from("campaigns").select("*").eq("user_id", user.id);
-      return data || [];
-    },
-    enabled: !!user,
-  });
+  const { data: logs = [], isLoading: logsLoading } = useReadingLogs();
+  const { data: campaigns = [] } = useCampaigns();
 
   const campaignMap = Object.fromEntries(campaigns.map((c) => [c.id, c.title]));
 

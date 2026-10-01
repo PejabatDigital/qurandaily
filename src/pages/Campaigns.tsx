@@ -1,20 +1,19 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 import { Tables } from "@/integrations/supabase/types";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Plus, Pencil, Trash2 } from "lucide-react";
 import { format, parseISO } from "date-fns";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import CreateCampaignDialog from "@/components/CreateCampaignDialog";
 import DeleteConfirmDialog from "@/components/DeleteConfirmDialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCampaigns } from "@/hooks/useCampaigns";
 
 const Campaigns = () => {
-  const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -22,19 +21,7 @@ const Campaigns = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const { data: campaigns = [], isLoading } = useQuery({
-    queryKey: ["campaigns", user?.id],
-    queryFn: async () => {
-      if (!user) return [];
-      const { data } = await supabase
-        .from("campaigns")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-      return data || [];
-    },
-    enabled: !!user,
-  });
+  const { data: campaigns = [], isLoading } = useCampaigns();
 
   const openEdit = (c: Tables<"campaigns">) => {
     setEditCampaign(c);

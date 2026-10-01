@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
@@ -18,6 +18,8 @@ import { getSurahForPage, TOTAL_PAGES } from "@/lib/quran-data";
 import { format, subDays, differenceInDays, isToday, parseISO, isPast, endOfDay } from "date-fns";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCampaigns } from "@/hooks/useCampaigns";
+import { useReadingLogs } from "@/hooks/useReadingLogs";
 
 const STREAK_MILESTONES: Record<number, string> = {
   7: "🎉 One week strong! Consistency is key.",
@@ -42,27 +44,8 @@ const Index = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const milestonesShown = useRef(new Set<string>());
 
-  const { data: campaigns = [], isLoading: campaignsLoading } = useQuery({
-    queryKey: ["campaigns", user?.id],
-    queryFn: async () => {
-      if (!user) return [];
-      const { data } = await supabase.from("campaigns").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
-      return data || [];
-    },
-    enabled: !!user,
-    refetchInterval: 60000,
-  });
-
-  const { data: logs = [], isLoading: logsLoading } = useQuery({
-    queryKey: ["reading_logs", user?.id],
-    queryFn: async () => {
-      if (!user) return [];
-      const { data } = await supabase.from("reading_logs").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
-      return data || [];
-    },
-    enabled: !!user,
-    refetchInterval: 60000,
-  });
+  const { data: campaigns = [], isLoading: campaignsLoading } = useCampaigns();
+  const { data: logs = [], isLoading: logsLoading } = useReadingLogs();
 
   const { data: displayName } = useQuery({
     queryKey: ["profile_name", user?.id],
@@ -92,9 +75,11 @@ const Index = () => {
   }, [campaigns, selectedCampaignId]);
 
   const activeCampaign = campaigns.find((c) => c.id === selectedCampaignId) || campaigns.find((c) => c.is_active) || campaigns[0] || null;
-  const campaignEndDate = activeCampaign ? endOfDay(parseISO(activeCampaign.end_date)) : null;
-  const isCampaignExpired = campaignEndDate ? isPast(campaignEndDate) : false;
-  const chartEndDate = campaignEndDate && isCampaignExpired ? campaignEndDate : new Date();
+  const campaignEndDate = useMemo(
+    () => (activeCampaign ? endOfDay(parseISO(activeCampaign.end_date)) : null),
+    [activeCampaign]
+  );
+  const isCampaignExpired = useMemo(() => (campaignEndDate ? isPast(campaignEndDate) : false), [campaignEndDate]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -118,31 +103,67 @@ const Index = () => {
     queryClient.invalidateQueries({ queryKey: ["campaigns"] });
   };
 
-  // Computed stats
-  const campaignLogs = activeCampaign
-    ? logs.filter((l) => l.campaign_id === activeCampaign.id && (!campaignEndDate || parseISO(l.created_at) <= campaignEndDate))
-    : [];
-  const totalPages = activeCampaign ? activeCampaign.end_page - activeCampaign.start_page + 1 : TOTAL_PAGES;
-  const pagesRead = campaignLogs.reduce((sum, l) => sum + l.pages_read, 0);
-  const percentage = totalPages > 0 ? (pagesRead / totalPages) * 100 : 0;
-  const lastLog = campaignLogs[0];
-  const lastPageMarker = lastLog?.current_page_marker ?? activeCampaign?.start_page ?? 1;
-  const todayLogs = campaignLogs.filter((l) => isToday(parseISO(l.created_at)));
-  const pagesReadToday = todayLogs.reduce((sum, l) => sum + l.pages_read, 0);
-  const daysRemaining = activeCampaign ? Math.max(1, differenceInDays(parseISO(activeCampaign.end_date), new Date()) + 1) : 1;
-  const pagesRemaining = totalPages - pagesRead;
-  const dailyTarget = isCampaignExpired ? 0 : Math.ceil(Math.max(0, pagesRemaining) / daysRemaining);
+  // Computed stats — derived from the full log history, so this only
+  // re-scans when the inputs actually change rather than on every render
+  // (menu toggles, refresh spinner, etc).
+  const {
+    campaignLogs,
+    pagesRead,
+    percentage,
+    lastPageMarker,
+    pagesReadToday,
+    daysRemaining,
+    dailyTarget,
+    streak,
+    chartData7,
+    chartData30,
+  } = useMemo(() => {
+    const chartEndDate = campaignEndDate && isCampaignExpired ? campaignEndDate : new Date();
+    const campaignLogs = activeCampaign
+      ? logs.filter((l) => l.campaign_id === activeCampaign.id && (!campaignEndDate || parseISO(l.created_at) <= campaignEndDate))
+      : [];
+    const totalPages = activeCampaign ? activeCampaign.end_page - activeCampaign.start_page + 1 : TOTAL_PAGES;
+    const pagesRead = campaignLogs.reduce((sum, l) => sum + l.pages_read, 0);
+    const percentage = totalPages > 0 ? (pagesRead / totalPages) * 100 : 0;
+    const lastLog = campaignLogs[0];
+    const lastPageMarker = lastLog?.current_page_marker ?? activeCampaign?.start_page ?? 1;
+    const todayLogs = campaignLogs.filter((l) => isToday(parseISO(l.created_at)));
+    const pagesReadToday = todayLogs.reduce((sum, l) => sum + l.pages_read, 0);
+    const daysRemaining = activeCampaign ? Math.max(1, differenceInDays(parseISO(activeCampaign.end_date), new Date()) + 1) : 1;
+    const pagesRemaining = totalPages - pagesRead;
+    const dailyTarget = isCampaignExpired ? 0 : Math.ceil(Math.max(0, pagesRemaining) / daysRemaining);
 
-  // Streak
-  let streak = 0;
-  if (campaignLogs.length > 0) {
-    const logDays = new Set(campaignLogs.map((l) => format(parseISO(l.created_at), "yyyy-MM-dd")));
-    let checkDate = chartEndDate;
-    while (logDays.has(format(checkDate, "yyyy-MM-dd"))) {
-      streak++;
-      checkDate = subDays(checkDate, 1);
+    let streak = 0;
+    if (campaignLogs.length > 0) {
+      const logDays = new Set(campaignLogs.map((l) => format(parseISO(l.created_at), "yyyy-MM-dd")));
+      let checkDate = chartEndDate;
+      while (logDays.has(format(checkDate, "yyyy-MM-dd"))) {
+        streak++;
+        checkDate = subDays(checkDate, 1);
+      }
     }
-  }
+
+    const buildChartData = (days: number, labelFormat: string) =>
+      Array.from({ length: days }, (_, i) => {
+        const date = subDays(chartEndDate, days - 1 - i);
+        const dayStr = format(date, "yyyy-MM-dd");
+        const dayLogs = campaignLogs.filter((l) => format(parseISO(l.created_at), "yyyy-MM-dd") === dayStr);
+        return { day: format(date, labelFormat), pages: dayLogs.reduce((sum, l) => sum + l.pages_read, 0) };
+      });
+
+    return {
+      campaignLogs,
+      pagesRead,
+      percentage,
+      lastPageMarker,
+      pagesReadToday,
+      daysRemaining,
+      dailyTarget,
+      streak,
+      chartData7: buildChartData(7, "EEE"),
+      chartData30: buildChartData(30, "d MMM"),
+    };
+  }, [activeCampaign, logs, campaignEndDate, isCampaignExpired]);
 
   // Milestone toasts (once per session)
   useEffect(() => {
@@ -170,19 +191,6 @@ const Index = () => {
       toast.success("🎊 You've completed your campaign! SubhanAllah!", { duration: 8000 });
     }
   }, [streak, percentage, activeCampaign, isLoading]);
-
-
-  // Chart data
-  const buildChartData = (days: number, labelFormat: string) =>
-    Array.from({ length: days }, (_, i) => {
-      const date = subDays(chartEndDate, days - 1 - i);
-      const dayStr = format(date, "yyyy-MM-dd");
-      const dayLogs = campaignLogs.filter((l) => format(parseISO(l.created_at), "yyyy-MM-dd") === dayStr);
-      return { day: format(date, labelFormat), pages: dayLogs.reduce((sum, l) => sum + l.pages_read, 0) };
-    });
-
-  const chartData7 = buildChartData(7, "EEE");
-  const chartData30 = buildChartData(30, "d MMM");
 
   if (isLoading) {
     return (

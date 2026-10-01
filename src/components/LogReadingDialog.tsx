@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { getSurahForPage, TOTAL_PAGES } from "@/lib/quran-data";
 import { Tables } from "@/integrations/supabase/types";
+import { useMutation } from "@tanstack/react-query";
 
 interface LogReadingDialogProps {
   open: boolean;
@@ -23,58 +24,50 @@ const LogReadingDialog = ({ open, onOpenChange, campaign, lastPageMarker, onLogg
   const { toast } = useToast();
   const [currentPage, setCurrentPage] = useState("");
   const [pagesRead, setPagesRead] = useState("");
-  const [loading, setLoading] = useState(false);
 
-  const handleLogByPage = async () => {
-    if (!campaign || !user) return;
+  const logReading = useMutation({
+    mutationFn: async (vars: { pagesRead: number; currentPageMarker: number; mode: "page" | "count" }) => {
+      if (!campaign || !user) throw new Error("Your session isn't ready yet. Please try again.");
+      const { error } = await supabase.from("reading_logs").insert({
+        campaign_id: campaign.id,
+        user_id: user.id,
+        pages_read: vars.pagesRead,
+        current_page_marker: vars.currentPageMarker,
+      });
+      if (error) throw error;
+    },
+    onSuccess: (_data, vars) => {
+      if (vars.mode === "page") {
+        toast({ title: "Logged!", description: `You're now on page ${vars.currentPageMarker} — ${getSurahForPage(vars.currentPageMarker)}` });
+        setCurrentPage("");
+      } else {
+        toast({ title: "Logged!", description: `${vars.pagesRead} pages recorded. Now on page ${vars.currentPageMarker}.` });
+        setPagesRead("");
+      }
+      onOpenChange(false);
+      onLogged();
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const handleLogByPage = () => {
     const page = parseInt(currentPage);
     if (isNaN(page) || page < 1 || page > TOTAL_PAGES) {
       toast({ title: "Invalid page", description: `Enter a page between 1 and ${TOTAL_PAGES}.`, variant: "destructive" });
       return;
     }
-    setLoading(true);
-    const read = Math.max(0, page - lastPageMarker);
-    const { error } = await supabase.from("reading_logs").insert({
-      campaign_id: campaign.id,
-      user_id: user.id,
-      pages_read: read,
-      current_page_marker: page,
-    });
-    setLoading(false);
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Logged!", description: `You're now on page ${page} — ${getSurahForPage(page)}` });
-      setCurrentPage("");
-      onOpenChange(false);
-      onLogged();
-    }
+    logReading.mutate({ pagesRead: Math.max(0, page - lastPageMarker), currentPageMarker: page, mode: "page" });
   };
 
-  const handleLogByCount = async () => {
-    if (!campaign || !user) return;
+  const handleLogByCount = () => {
     const count = parseInt(pagesRead);
     if (isNaN(count) || count < 1) {
       toast({ title: "Invalid count", description: "Enter at least 1 page.", variant: "destructive" });
       return;
     }
-    setLoading(true);
-    const newMarker = Math.min(lastPageMarker + count, TOTAL_PAGES);
-    const { error } = await supabase.from("reading_logs").insert({
-      campaign_id: campaign.id,
-      user_id: user.id,
-      pages_read: count,
-      current_page_marker: newMarker,
-    });
-    setLoading(false);
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Logged!", description: `${count} pages recorded. Now on page ${newMarker}.` });
-      setPagesRead("");
-      onOpenChange(false);
-      onLogged();
-    }
+    logReading.mutate({ pagesRead: count, currentPageMarker: Math.min(lastPageMarker + count, TOTAL_PAGES), mode: "count" });
   };
 
   if (!campaign) return null;
@@ -105,7 +98,7 @@ const LogReadingDialog = ({ open, onOpenChange, campaign, lastPageMarker, onLogg
                 onChange={(e) => setCurrentPage(e.target.value)}
               />
             </div>
-            <Button onClick={handleLogByPage} disabled={loading} className="w-full">
+            <Button onClick={handleLogByPage} disabled={logReading.isPending} className="w-full">
               Save
             </Button>
           </TabsContent>
@@ -120,7 +113,7 @@ const LogReadingDialog = ({ open, onOpenChange, campaign, lastPageMarker, onLogg
                 onChange={(e) => setPagesRead(e.target.value)}
               />
             </div>
-            <Button onClick={handleLogByCount} disabled={loading} className="w-full">
+            <Button onClick={handleLogByCount} disabled={logReading.isPending} className="w-full">
               Save
             </Button>
           </TabsContent>

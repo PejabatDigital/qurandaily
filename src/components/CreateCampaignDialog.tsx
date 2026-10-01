@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Tables } from "@/integrations/supabase/types";
 import { getStartPageForSurah, getEndPageForSurah, getSurahNumberForPage } from "@/lib/quran-data";
 import SurahSelect from "@/components/SurahSelect";
+import { useMutation } from "@tanstack/react-query";
 
 interface CreateCampaignDialogProps {
   open: boolean;
@@ -24,7 +25,6 @@ const CreateCampaignDialog = ({ open, onOpenChange, onCreated, campaign }: Creat
   const [startSurah, setStartSurah] = useState("1");
   const [endSurah, setEndSurah] = useState("114");
   const [endDate, setEndDate] = useState("");
-  const [loading, setLoading] = useState(false);
 
   const isEditing = !!campaign;
 
@@ -42,49 +42,53 @@ const CreateCampaignDialog = ({ open, onOpenChange, onCreated, campaign }: Creat
     }
   }, [campaign, open]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return;
-    setLoading(true);
-
-    const startPage = getStartPageForSurah(startSurah);
-    const endPage = getEndPageForSurah(endSurah);
-
-    if (isEditing) {
-      const { error } = await supabase
-        .from("campaigns")
-        .update({ title, start_page: startPage, end_page: endPage, end_date: endDate })
-        .eq("id", campaign!.id);
-      setLoading(false);
-      if (error) {
-        toast({ title: "Error", description: error.message, variant: "destructive" });
+  const saveCampaign = useMutation({
+    mutationFn: async (vars: { title: string; startPage: number; endPage: number; endDate: string }) => {
+      if (!user) throw new Error("Your session isn't ready yet. Please try again.");
+      if (campaign) {
+        const { error } = await supabase
+          .from("campaigns")
+          .update({ title: vars.title, start_page: vars.startPage, end_page: vars.endPage, end_date: vars.endDate })
+          .eq("id", campaign.id);
+        if (error) throw error;
       } else {
-        toast({ title: "Campaign updated!" });
-        onOpenChange(false);
-        onCreated();
+        const { error } = await supabase.from("campaigns").insert({
+          user_id: user.id,
+          title: vars.title,
+          start_page: vars.startPage,
+          end_page: vars.endPage,
+          end_date: vars.endDate,
+          is_active: true,
+        });
+        if (error) throw error;
       }
-    } else {
-      const { error } = await supabase.from("campaigns").insert({
-        user_id: user.id,
-        title,
-        start_page: startPage,
-        end_page: endPage,
-        end_date: endDate,
-        is_active: true,
-      });
-      setLoading(false);
-      if (error) {
-        toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+    onSuccess: (_data, vars) => {
+      if (isEditing) {
+        toast({ title: "Campaign updated!" });
       } else {
-        toast({ title: "Campaign created!", description: `"${title}" is now your active campaign.` });
+        toast({ title: "Campaign created!", description: `"${vars.title}" is now your active campaign.` });
         setTitle("");
         setStartSurah("1");
         setEndSurah("114");
         setEndDate("");
-        onOpenChange(false);
-        onCreated();
       }
-    }
+      onOpenChange(false);
+      onCreated();
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    saveCampaign.mutate({
+      title,
+      startPage: getStartPageForSurah(startSurah),
+      endPage: getEndPageForSurah(endSurah),
+      endDate,
+    });
   };
 
   return (
@@ -115,8 +119,8 @@ const CreateCampaignDialog = ({ open, onOpenChange, onCreated, campaign }: Creat
             <Label>End Date</Label>
             <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} required />
           </div>
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Saving..." : isEditing ? "Update Campaign" : "Create Campaign"}
+          <Button type="submit" className="w-full" disabled={saveCampaign.isPending}>
+            {saveCampaign.isPending ? "Saving..." : isEditing ? "Update Campaign" : "Create Campaign"}
           </Button>
         </form>
       </DialogContent>

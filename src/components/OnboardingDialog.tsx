@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { getStartPageForSurah, getEndPageForSurah } from "@/lib/quran-data";
 import SurahSelect from "@/components/SurahSelect";
 import { BookOpen, ArrowRight } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
 
 interface OnboardingDialogProps {
   open: boolean;
@@ -25,50 +26,55 @@ const OnboardingDialog = ({ open, onOpenChange, onComplete }: OnboardingDialogPr
   const [startSurah, setStartSurah] = useState("1");
   const [endSurah, setEndSurah] = useState("114");
   const [endDate, setEndDate] = useState("");
-  const [loading, setLoading] = useState(false);
 
-  const handleStep1 = async () => {
-    if (!displayName.trim()) return;
-    if (!user || !session) {
-      toast({ title: "Error", description: "Your session isn't ready yet. Please try again.", variant: "destructive" });
-      return;
-    }
-    setLoading(true);
-    const { error } = await supabase.from("profiles").update({ display_name: displayName.trim() }).eq("user_id", user.id);
-    setLoading(false);
-    if (error) {
+  const updateDisplayName = useMutation({
+    mutationFn: async (name: string) => {
+      if (!user || !session) throw new Error("Your session isn't ready yet. Please try again.");
+      const { error } = await supabase.from("profiles").update({ display_name: name }).eq("user_id", user.id);
+      if (error) throw error;
+    },
+    onSuccess: () => setStep(2),
+    onError: (error: Error) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
-      return;
-    }
-    setStep(2);
-  };
+    },
+  });
 
-  const handleStep2 = async () => {
-    if (!campaignTitle.trim() || !endDate) return;
-    if (!user || !session) {
-      toast({ title: "Error", description: "Your session isn't ready yet. Please try again.", variant: "destructive" });
-      return;
-    }
-    setLoading(true);
-    const startPage = getStartPageForSurah(startSurah);
-    const endPage = getEndPageForSurah(endSurah);
-
-    const { error } = await supabase.from("campaigns").insert({
-      user_id: user.id,
-      title: campaignTitle.trim(),
-      start_page: startPage,
-      end_page: endPage,
-      end_date: endDate,
-      is_active: true,
-    });
-    setLoading(false);
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
+  const createFirstCampaign = useMutation({
+    mutationFn: async (vars: { title: string; startPage: number; endPage: number; endDate: string }) => {
+      if (!user || !session) throw new Error("Your session isn't ready yet. Please try again.");
+      const { error } = await supabase.from("campaigns").insert({
+        user_id: user.id,
+        title: vars.title,
+        start_page: vars.startPage,
+        end_page: vars.endPage,
+        end_date: vars.endDate,
+        is_active: true,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
       toast({ title: "Welcome aboard!", description: "Your first campaign is ready. Start reading!" });
       onOpenChange(false);
       onComplete();
-    }
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const handleStep1 = () => {
+    if (!displayName.trim()) return;
+    updateDisplayName.mutate(displayName.trim());
+  };
+
+  const handleStep2 = () => {
+    if (!campaignTitle.trim() || !endDate) return;
+    createFirstCampaign.mutate({
+      title: campaignTitle.trim(),
+      startPage: getStartPageForSurah(startSurah),
+      endPage: getEndPageForSurah(endSurah),
+      endDate,
+    });
   };
 
   return (
@@ -99,7 +105,7 @@ const OnboardingDialog = ({ open, onOpenChange, onComplete }: OnboardingDialogPr
                 autoFocus
               />
             </div>
-            <Button className="w-full" onClick={handleStep1} disabled={!displayName.trim() || loading}>
+            <Button className="w-full" onClick={handleStep1} disabled={!displayName.trim() || updateDisplayName.isPending}>
               Continue <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
@@ -131,9 +137,9 @@ const OnboardingDialog = ({ open, onOpenChange, onComplete }: OnboardingDialogPr
             <Button
               className="w-full"
               onClick={handleStep2}
-              disabled={!campaignTitle.trim() || !endDate || loading}
+              disabled={!campaignTitle.trim() || !endDate || createFirstCampaign.isPending}
             >
-              {loading ? "Creating..." : "Start My Journey"}
+              {createFirstCampaign.isPending ? "Creating..." : "Start My Journey"}
             </Button>
           </div>
         )}
