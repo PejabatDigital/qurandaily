@@ -78,10 +78,10 @@ const Index = () => {
 
   // Show onboarding for new users
   useEffect(() => {
-    if (!isLoading && campaigns.length === 0 && (!displayName || displayName === user?.email)) {
+    if (!isLoading && campaigns.length === 0 && !displayName) {
       setShowOnboarding(true);
     }
-  }, [isLoading, campaigns.length, displayName, user?.email]);
+  }, [isLoading, campaigns.length, displayName]);
 
   // Auto-select active campaign
   useEffect(() => {

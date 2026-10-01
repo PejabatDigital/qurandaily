@@ -31,7 +31,13 @@ function FatalError({ message }: { message: string }) {
   );
 }
 
-const root = createRoot(document.getElementById("root")!);
+const rootElement = document.getElementById("root");
+
+if (!rootElement) {
+  throw new Error('Could not find root element: <div id="root"> is missing from index.html');
+}
+
+const root = createRoot(rootElement);
 
 // App (and its transitive imports, e.g. the Supabase client) is loaded dynamically
 // so a module-load-time crash — like a missing env var — can be caught here and
