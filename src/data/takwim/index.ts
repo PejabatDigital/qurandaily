@@ -2,8 +2,9 @@
 // To add a year, create ./<year>.ts and list it below.
 import type { TakwimYearSource } from "./types";
 import takwim2026 from "./2026";
+import takwim2027 from "./2027";
 
-export const TAKWIM_SOURCES: TakwimYearSource[] = [takwim2026];
+export const TAKWIM_SOURCES: TakwimYearSource[] = [takwim2026, takwim2027];
 
 export * from "./types";
 export * from "./names";

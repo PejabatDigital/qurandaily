@@ -46,6 +46,10 @@ describe("Takwim data", () => {
     ["Aidiladha 2026", 2026, 4, 27, [10, "ZHJ", 1447]],
     ["Awal Muharram 2026", 2026, 5, 17, [1, "MUH", 1448]],
     ["Maulidur Rasul 2026", 2026, 7, 25, [12, "RAW", 1448]],
+    ["Aidilfitri 2027", 2027, 2, 10, [1, "SYW", 1448]],
+    ["Aidiladha 2027", 2027, 4, 17, [10, "ZHJ", 1448]],
+    ["Awal Muharram 2027", 2027, 5, 6, [1, "MUH", 1449]],
+    ["Maulidur Rasul 2027", 2027, 7, 15, [12, "RAW", 1449]],
   ] as const)("puts %s on the right day", (_, year, m, day, hijri) => {
     expect(getDayEntry({ year, m, d: day - 1 })?.slice(0, 3)).toEqual(hijri);
   });
