@@ -15,12 +15,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, BookOpen, Flame, Target, BookMarked, Menu, TrendingUp, RefreshCw, Clock, AlertTriangle } from "lucide-react";
 import { getSurahForPage, TOTAL_PAGES } from "@/lib/quran-data";
-import { format, subDays, differenceInDays, isToday, parseISO, isPast, endOfDay } from "date-fns";
+import { format, subDays, isToday, parseISO, isPast, endOfDay } from "date-fns";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCampaigns } from "@/hooks/useCampaigns";
 import { useReadingLogs } from "@/hooks/useReadingLogs";
 import { dueMilestones, loadShownMilestones, saveShownMilestones } from "@/lib/milestones";
+import { dailyPace, daysInclusive } from "@/lib/plan";
 
 const Index = () => {
   const { user } = useAuth();
@@ -117,9 +118,9 @@ const Index = () => {
     const lastPageMarker = lastLog?.current_page_marker ?? activeCampaign?.start_page ?? 1;
     const todayLogs = campaignLogs.filter((l) => isToday(parseISO(l.created_at)));
     const pagesReadToday = todayLogs.reduce((sum, l) => sum + l.pages_read, 0);
-    const daysRemaining = activeCampaign ? Math.max(1, differenceInDays(parseISO(activeCampaign.end_date), new Date()) + 1) : 1;
+    const daysRemaining = activeCampaign ? daysInclusive(new Date(), parseISO(activeCampaign.end_date)) : 1;
     const pagesRemaining = totalPages - pagesRead;
-    const dailyTarget = isCampaignExpired ? 0 : Math.ceil(Math.max(0, pagesRemaining) / daysRemaining);
+    const dailyTarget = isCampaignExpired ? 0 : dailyPace(pagesRemaining, daysRemaining);
 
     let streak = 0;
     if (campaignLogs.length > 0) {

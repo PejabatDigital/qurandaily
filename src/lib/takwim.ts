@@ -139,6 +139,29 @@ export function todayInTakwim(now: Date = new Date()): TakwimDay | null {
 }
 
 /**
+ * The last day of the current or next Ramadan on or after `from`: the day
+ * before the first 1 Syawal after `from`, read from the Takwim data. Null if
+ * the data doesn't reach that far.
+ */
+export function endOfRamadan(from: Date = new Date()): Date | null {
+  const today = new Date(from.getFullYear(), from.getMonth(), from.getDate());
+  for (const year of TAKWIM_YEARS) {
+    if (year < today.getFullYear()) continue;
+    const { days } = YEARS.get(year)!;
+    for (let m = 0; m < 12; m++) {
+      for (let d = 0; d < days[m].length; d++) {
+        const [hDay, hMonth] = days[m][d];
+        // new Date(y, m, d) is the day before (y, m, d + 1), even across months.
+        if (hDay === 1 && hMonth === "SYW" && new Date(year, m, d + 1) > today) {
+          return new Date(year, m, d);
+        }
+      }
+    }
+  }
+  return null;
+}
+
+/**
  * The month before (delta -1) or after (delta 1) `cur`, staying within
  * `years` (ascending) and skipping any years missing from it. Returns null
  * at either end.
