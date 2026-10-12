@@ -10,6 +10,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "deploy": "npm run build && wrangler deploy",
+    "takwim:fetch": "node scripts/fetch-takwim.mjs",
     "test": "vitest run",
     "test:watch": "vitest"
   },

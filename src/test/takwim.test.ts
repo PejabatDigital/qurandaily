@@ -40,6 +40,16 @@ describe("Takwim data", () => {
     }
   });
 
+  // Gazetted Malaysian public holidays, as a cross-check on the Hijri data.
+  it.each([
+    ["Aidilfitri 2026", 2026, 2, 21, [1, "SYW", 1447]],
+    ["Aidiladha 2026", 2026, 4, 27, [10, "ZHJ", 1447]],
+    ["Awal Muharram 2026", 2026, 5, 17, [1, "MUH", 1448]],
+    ["Maulidur Rasul 2026", 2026, 7, 25, [12, "RAW", 1448]],
+  ] as const)("puts %s on the right day", (_, year, m, day, hijri) => {
+    expect(getDayEntry({ year, m, d: day - 1 })?.slice(0, 3)).toEqual(hijri);
+  });
+
   it("rejects month starts out of order", () => {
     expect(() => buildTakwimYear({
       year: 2026, source: "test", jan1: [11, "REJ", 1447], monthStarts: [["01-20", "RAM", 1447]],
