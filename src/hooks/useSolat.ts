@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { fetchSolatMonth, DEFAULT_ZONE } from "@/lib/solat";
+import { fetchSolatMonth, DEFAULT_ZONE, SolatUnavailableError } from "@/lib/solat";
 
 const STORAGE_KEY = "takwim:zone";
 
@@ -10,7 +10,7 @@ export function useSolatMonth(zone: string, year: number, month: number) {
     queryFn: () => fetchSolatMonth(zone, year, month),
     staleTime: 1000 * 60 * 60,
     gcTime: 1000 * 60 * 60 * 6,
-    retry: 1,
+    retry: (failures, error) => !(error instanceof SolatUnavailableError) && failures < 1,
   });
 }
 

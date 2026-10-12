@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ZonePicker } from "@/components/takwim/ZonePicker";
 import { DayDetailSheet } from "@/components/takwim/DayDetailSheet";
 import { useSelectedZone, useSolatMonth } from "@/hooks/useSolat";
-import { PRAYER_LABELS, formatPrayerTime } from "@/lib/solat";
+import { PRAYER_LABELS, SolatUnavailableError, formatPrayerTime } from "@/lib/solat";
 import { getDayEntry, todayInTakwim } from "@/lib/takwim";
 import { HIJRI_MONTHS, MONTHS_EN, DAY_EN } from "@/data/takwim";
 
@@ -37,7 +37,7 @@ const TodayCard = () => {
   const month = todayDate.getMonth() + 1;
   const day = todayDate.getDate();
 
-  const { data, isLoading, isError } = useSolatMonth(zone, year, month);
+  const { data, isLoading, isError, error } = useSolatMonth(zone, year, month);
   const prayer = data?.prayers.find((p) => p.day === day);
 
   const nextPrayer = useMemo(() => {
@@ -90,6 +90,8 @@ const TodayCard = () => {
                 <Skeleton className="h-4 w-32" />
                 <Skeleton className="h-4 w-16" />
               </div>
+            ) : error instanceof SolatUnavailableError ? (
+              <p className="text-xs text-muted-foreground">Prayer times aren't available yet.</p>
             ) : isError || !prayer ? (
               <p className="text-xs text-destructive">Could not load prayer times.</p>
             ) : nextPrayer ? (

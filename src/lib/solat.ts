@@ -89,6 +89,9 @@ export type MonthResponse = {
   prayers: DayPrayer[];
 };
 
+/** The API has no prayer times for that zone and month (e.g. a year not yet published). */
+export class SolatUnavailableError extends Error {}
+
 export async function fetchSolatMonth(
   zone: string,
   year: number,
@@ -96,6 +99,7 @@ export async function fetchSolatMonth(
 ): Promise<MonthResponse> {
   const url = `https://api.waktusolat.app/v2/solat/${zone}?year=${year}&month=${month}`;
   const res = await fetch(url);
+  if (res.status === 404) throw new SolatUnavailableError(`No prayer times for ${zone} ${year}-${month}`);
   if (!res.ok) throw new Error(`Solat API ${res.status}`);
   return res.json();
 }

@@ -1,6 +1,6 @@
 import { useSolatMonth } from "@/hooks/useSolat";
 import { useSelectedZone } from "@/hooks/useSolat";
-import { PRAYER_LABELS, formatPrayerTime, type DayPrayer } from "@/lib/solat";
+import { PRAYER_LABELS, SolatUnavailableError, formatPrayerTime, type DayPrayer } from "@/lib/solat";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
@@ -17,7 +17,7 @@ export function PrayerTimes({ year, m, d, highlightKey }: PrayerTimesProps) {
   const [zone] = useSelectedZone();
   const month = m + 1;
   const day = d + 1;
-  const { data, isLoading, isError } = useSolatMonth(zone, year, month);
+  const { data, isLoading, isError, error } = useSolatMonth(zone, year, month);
 
   const prayer = data?.prayers.find((p) => p.day === day);
 
@@ -31,6 +31,12 @@ export function PrayerTimes({ year, m, d, highlightKey }: PrayerTimesProps) {
           </li>
         ))}
       </ul>
+    );
+  }
+
+  if (error instanceof SolatUnavailableError) {
+    return (
+      <p className="text-xs text-muted-foreground">Prayer times for {year} aren't available yet.</p>
     );
   }
 
