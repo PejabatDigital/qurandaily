@@ -23,7 +23,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCampaigns } from "@/hooks/useCampaigns";
 import { useReadingLogs } from "@/hooks/useReadingLogs";
 import { dueMilestones, loadShownMilestones, saveShownMilestones } from "@/lib/milestones";
-import { dailyPace, daysInclusive, pagesBehind } from "@/lib/plan";
+import { dailyPace, daysInclusive, displayPage, pagesBehind } from "@/lib/plan";
 import { dismissCatchUp, isCatchUpDismissed } from "@/lib/catch-up";
 
 const Index = () => {
@@ -240,6 +240,7 @@ const Index = () => {
     catchUpDismissedId !== activeCampaign.id &&
     !isCatchUpDismissed(activeCampaign.id);
   const showPlanEnded = !!activeCampaign && isCampaignExpired && !isComplete;
+  const onPage = activeCampaign ? displayPage(lastPageMarker, activeCampaign.end_page) : lastPageMarker;
 
   return (
     <div className="min-h-screen bg-background">
@@ -288,7 +289,7 @@ const Index = () => {
         {showPlanEnded && activeCampaign && (
           <PlanEndedCard
             endDate={parseISO(activeCampaign.end_date)}
-            page={lastPageMarker}
+            page={onPage}
             endPage={activeCampaign.end_page}
             percentage={percentage}
             pagesRemaining={pagesRemaining}
@@ -309,7 +310,7 @@ const Index = () => {
             <div className="flex flex-col items-center space-y-2">
               <CircularProgress percentage={percentage} />
               <p className="text-sm text-muted-foreground">
-                Page {lastPageMarker}, {getSurahForPage(lastPageMarker)}
+                Page {onPage}, {getSurahForPage(onPage)}
               </p>
               <p className="text-xs text-muted-foreground">
                 {activeCampaign.title} · {isCampaignExpired

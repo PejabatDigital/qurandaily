@@ -105,7 +105,7 @@ const History = () => {
               <CardContent className="flex items-center justify-between p-4">
                 <div>
                   <p className="text-sm font-medium">
-                    {log.pages_read} page{log.pages_read !== 1 ? "s" : ""} — Page {log.current_page_marker}
+                    {log.pages_read} page{log.pages_read !== 1 ? "s" : ""} — Page {Math.min(log.current_page_marker, TOTAL_PAGES)}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {getSurahForPage(log.current_page_marker)} · {campaignMap[log.campaign_id] || "Unknown"}
@@ -141,7 +141,7 @@ const History = () => {
             </div>
             <div className="space-y-2">
               <Label>Page Marker</Label>
-              <Input type="number" min={1} max={TOTAL_PAGES} value={pageMarker} onChange={(e) => setPageMarker(e.target.value)} required />
+              <Input type="number" min={1} max={TOTAL_PAGES + 1} value={pageMarker} onChange={(e) => setPageMarker(e.target.value)} required />
             </div>
             <div className="space-y-2">
               <Label>Date & Time</Label>

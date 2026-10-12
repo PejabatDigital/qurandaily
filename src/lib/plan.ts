@@ -79,6 +79,25 @@ export function pagesBehind(opts: {
   return Math.round(expected - opts.pagesRead);
 }
 
+// A plan's page marker (reading_logs.current_page_marker, or the plan's
+// start_page before any logs) is the next page to read. Reading the plan's
+// last page moves it one past the end, which is when the plan is complete.
+
+/** Logging "the last page I read": that page and everything since the marker counts. */
+export function logFromLastPage(marker: number, lastRead: number): { pagesRead: number; nextMarker: number } {
+  return { pagesRead: Math.max(0, lastRead - marker + 1), nextMarker: lastRead + 1 };
+}
+
+/** Logging a number of pages read from the marker onwards. */
+export function logFromCount(marker: number, count: number, endPage: number): { pagesRead: number; nextMarker: number } {
+  return { pagesRead: count, nextMarker: Math.min(marker + count, endPage + 1) };
+}
+
+/** The page to show for a marker: once the plan is finished, its last page. */
+export function displayPage(marker: number, endPage: number): number {
+  return Math.min(marker, endPage);
+}
+
 /** "1 page" / "5 pages" */
 export function pagesLabel(n: number): string {
   return `${n} ${n === 1 ? "page" : "pages"}`;

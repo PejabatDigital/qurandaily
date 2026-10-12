@@ -6,7 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { getSurahForPage, TOTAL_PAGES } from "@/lib/quran-data";
+import { getSurahForPage } from "@/lib/quran-data";
+import { displayPage, logFromCount, logFromLastPage, pagesLabel } from "@/lib/plan";
 import { Tables } from "@/integrations/supabase/types";
 import { useMutation } from "@tanstack/react-query";
 
@@ -45,13 +46,13 @@ const LogReadingDialog = ({ open, onOpenChange, campaign, lastPageMarker, onLogg
       if (error) throw error;
     },
     onSuccess: (_data, vars) => {
-      if (vars.mode === "page") {
-        toast({ title: "Logged!", description: `You're now on page ${vars.currentPageMarker} — ${getSurahForPage(vars.currentPageMarker)}` });
-        setCurrentPage("");
-      } else {
-        toast({ title: "Logged!", description: `${vars.pagesRead} pages recorded. Now on page ${vars.currentPageMarker}.` });
-        setPagesRead("");
-      }
+      const lastRead = vars.currentPageMarker - 1;
+      toast({
+        title: "Logged!",
+        description: `${pagesLabel(vars.pagesRead)} recorded. Last read: page ${lastRead}, ${getSurahForPage(lastRead)}.`,
+      });
+      if (vars.mode === "page") setCurrentPage("");
+      else setPagesRead("");
       onOpenChange(false);
       onLogged();
     },
@@ -61,24 +62,29 @@ const LogReadingDialog = ({ open, onOpenChange, campaign, lastPageMarker, onLogg
   });
 
   const handleLogByPage = () => {
-    const page = parseInt(currentPage);
-    if (isNaN(page) || page < 1 || page > TOTAL_PAGES) {
-      setPageError(`Enter a page between 1 and ${TOTAL_PAGES}.`);
+    if (!campaign) return;
+    const page = Number(currentPage);
+    if (!currentPage.trim() || !Number.isInteger(page) || page < campaign.start_page || page > campaign.end_page) {
+      setPageError(`Enter a page between ${campaign.start_page} and ${campaign.end_page}.`);
       return;
     }
-    logReading.mutate({ pagesRead: Math.max(0, page - lastPageMarker), currentPageMarker: page, mode: "page" });
+    const { pagesRead, nextMarker } = logFromLastPage(lastPageMarker, page);
+    logReading.mutate({ pagesRead, currentPageMarker: nextMarker, mode: "page" });
   };
 
   const handleLogByCount = () => {
+    if (!campaign) return;
     const count = parseInt(pagesRead);
     if (isNaN(count) || count < 1) {
       setCountError("Enter at least 1 page.");
       return;
     }
-    logReading.mutate({ pagesRead: count, currentPageMarker: Math.min(lastPageMarker + count, TOTAL_PAGES), mode: "count" });
+    const { pagesRead: read, nextMarker } = logFromCount(lastPageMarker, count, campaign.end_page);
+    logReading.mutate({ pagesRead: read, currentPageMarker: nextMarker, mode: "count" });
   };
 
   if (!campaign) return null;
+  const onPage = displayPage(lastPageMarker, campaign.end_page);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -86,29 +92,14 @@ const LogReadingDialog = ({ open, onOpenChange, campaign, lastPageMarker, onLogg
         <DialogHeader>
           <DialogTitle>Log Reading</DialogTitle>
           <DialogDescription>
-            Currently on page {lastPageMarker} — {getSurahForPage(lastPageMarker)}
+            Currently on page {onPage} — {getSurahForPage(onPage)}
           </DialogDescription>
         </DialogHeader>
-        <Tabs defaultValue="page" className="w-full">
+        <Tabs defaultValue="count" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="page">By Page</TabsTrigger>
             <TabsTrigger value="count">By Count</TabsTrigger>
+            <TabsTrigger value="page">By Page</TabsTrigger>
           </TabsList>
-          <TabsContent value="page" className="space-y-4 pt-2">
-            <InputField
-              label="What page are you on now?"
-              type="number"
-              min={1}
-              max={TOTAL_PAGES}
-              placeholder="e.g. 42"
-              value={currentPage}
-              error={pageError}
-              onChange={(e) => { setCurrentPage(e.target.value); setPageError(null); }}
-            />
-            <Button onClick={handleLogByPage} disabled={logReading.isPending} className="w-full">
-              Save
-            </Button>
-          </TabsContent>
           <TabsContent value="count" className="space-y-4 pt-2">
             <InputField
               label="How many pages did you read?"
@@ -120,6 +111,21 @@ const LogReadingDialog = ({ open, onOpenChange, campaign, lastPageMarker, onLogg
               onChange={(e) => { setPagesRead(e.target.value); setCountError(null); }}
             />
             <Button onClick={handleLogByCount} disabled={logReading.isPending} className="w-full">
+              Save
+            </Button>
+          </TabsContent>
+          <TabsContent value="page" className="space-y-4 pt-2">
+            <InputField
+              label="What is the last page you read?"
+              type="number"
+              min={campaign.start_page}
+              max={campaign.end_page}
+              placeholder="e.g. 42"
+              value={currentPage}
+              error={pageError}
+              onChange={(e) => { setCurrentPage(e.target.value); setPageError(null); }}
+            />
+            <Button onClick={handleLogByPage} disabled={logReading.isPending} className="w-full">
               Save
             </Button>
           </TabsContent>

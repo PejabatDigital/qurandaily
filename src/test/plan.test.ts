@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { format } from "date-fns";
 import {
   JUZ_AMMA_START_PAGE, dailyPace, daysInclusive, finishAfterDays, finishAfterYears,
-  goalPages, goalTitle, pagesBehind, pagesLabel, pagesPerPrayer, pagesToGo,
+  displayPage, goalPages, goalTitle, logFromCount, logFromLastPage, pagesBehind, pagesLabel, pagesPerPrayer, pagesToGo,
 } from "@/lib/plan";
 import { endOfRamadan } from "@/lib/takwim";
 
@@ -122,5 +122,36 @@ describe("pagesBehind", () => {
 
   it("never expects more than the whole plan", () => {
     expect(pagesBehind({ ...plan, pagesRead: 600, today: new Date(2026, 11, 1) })).toBe(4);
+  });
+});
+
+describe("logging", () => {
+  it("counts the last page read itself", () => {
+    // On page 1 (nothing read yet), read page 1.
+    expect(logFromLastPage(1, 1)).toEqual({ pagesRead: 1, nextMarker: 2 });
+    // On page 50, read up to 59.
+    expect(logFromLastPage(50, 59)).toEqual({ pagesRead: 10, nextMarker: 60 });
+  });
+
+  it("completes a khatam when the last page read is 604", () => {
+    // Last session ended on 603, so the reader is on 604 and reads it.
+    expect(logFromLastPage(604, 604)).toEqual({ pagesRead: 1, nextMarker: 605 });
+    expect(logFromCount(604, 1, 604)).toEqual({ pagesRead: 1, nextMarker: 605 });
+    // 603 pages before plus this 1 = all 604.
+    expect(603 + logFromCount(604, 1, 604).pagesRead).toBe(604);
+  });
+
+  it("never moves the marker more than one past the plan's last page", () => {
+    expect(logFromCount(600, 20, 604).nextMarker).toBe(605);
+    expect(logFromCount(590, 5, 604).nextMarker).toBe(595);
+  });
+
+  it("logs nothing when going back to an earlier page", () => {
+    expect(logFromLastPage(100, 80)).toEqual({ pagesRead: 0, nextMarker: 81 });
+  });
+
+  it("shows the plan's last page once finished", () => {
+    expect(displayPage(605, 604)).toBe(604);
+    expect(displayPage(142, 604)).toBe(142);
   });
 });

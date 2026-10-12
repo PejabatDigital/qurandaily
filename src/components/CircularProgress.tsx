@@ -34,7 +34,7 @@ const CircularProgress = ({ percentage, size = 180, strokeWidth = 10 }: Circular
         />
       </svg>
       <div className="absolute flex flex-col items-center">
-        <span className="text-3xl font-bold text-foreground">{Math.round(percentage)}%</span>
+        <span className="text-3xl font-bold text-foreground">{Math.min(100, Math.round(percentage))}%</span>
         <span className="text-xs text-muted-foreground">completed</span>
       </div>
     </div>
