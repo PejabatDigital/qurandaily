@@ -7,11 +7,14 @@ import { cn } from "@/lib/utils";
 import { ChevronDown, MapPin } from "lucide-react";
 
 interface ZonePickerProps {
-  variant?: "compact" | "inline";
+  /** "field" is a full-width select-style trigger for forms. */
+  variant?: "compact" | "inline" | "field";
   className?: string;
+  id?: string;
+  "aria-describedby"?: string;
 }
 
-export function ZonePicker({ variant = "compact", className }: ZonePickerProps) {
+export function ZonePicker({ variant = "compact", className, id, "aria-describedby": describedBy }: ZonePickerProps) {
   const [zone, setZone] = useSelectedZone();
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
@@ -40,22 +43,43 @@ export function ZonePicker({ variant = "compact", className }: ZonePickerProps) 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button
-          className={cn(
-            "inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground transition hover:border-primary/40 hover:text-foreground",
-            variant === "inline" && "border-transparent bg-transparent px-1 py-0 text-[11px] underline-offset-2 hover:underline",
-            className,
-          )}
-          aria-label="Change prayer zone"
-        >
-          <MapPin className="h-3 w-3" />
-          <span className="font-mono">{zone}</span>
-          <span className="hidden sm:inline text-muted-foreground/70">·</span>
-          <span className="hidden max-w-[10rem] truncate sm:inline">{current?.daerah ?? ""}</span>
-          <ChevronDown className="h-3 w-3 opacity-60" />
-        </button>
+        {variant === "field" ? (
+          <button
+            id={id}
+            type="button"
+            aria-describedby={describedBy}
+            className={cn(
+              "flex h-10 w-full items-center justify-between gap-2 rounded-md border border-input bg-background px-3 text-left text-sm text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+              className,
+            )}
+          >
+            <span className="truncate">
+              {zone}
+              {current && ` · ${current.daerah}`}
+            </span>
+            <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+          </button>
+        ) : (
+          <button
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground transition hover:border-primary/40 hover:text-foreground",
+              variant === "inline" && "border-transparent bg-transparent px-1 py-0 text-[11px] underline-offset-2 hover:underline",
+              className,
+            )}
+            aria-label="Change prayer zone"
+          >
+            <MapPin className="h-3 w-3" />
+            <span className="font-mono">{zone}</span>
+            <span className="hidden sm:inline text-muted-foreground/70">·</span>
+            <span className="hidden max-w-[10rem] truncate sm:inline">{current?.daerah ?? ""}</span>
+            <ChevronDown className="h-3 w-3 opacity-60" />
+          </button>
+        )}
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-72 p-2">
+      <PopoverContent
+        align={variant === "field" ? "start" : "end"}
+        className={cn("p-2", variant === "field" ? "w-[var(--radix-popover-trigger-width)]" : "w-72")}
+      >
         <Input
           autoFocus
           value={q}
