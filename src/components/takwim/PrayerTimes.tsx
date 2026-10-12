@@ -4,9 +4,8 @@ import { PRAYER_LABELS, formatPrayerTime, type DayPrayer } from "@/lib/solat";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
-const YEAR = 2026;
-
 interface PrayerTimesProps {
+  year: number;
   /** 0-indexed month */
   m: number;
   /** 0-indexed day */
@@ -14,11 +13,11 @@ interface PrayerTimesProps {
   highlightKey?: keyof Omit<DayPrayer, "day" | "hijri"> | null;
 }
 
-export function PrayerTimes({ m, d, highlightKey }: PrayerTimesProps) {
+export function PrayerTimes({ year, m, d, highlightKey }: PrayerTimesProps) {
   const [zone] = useSelectedZone();
   const month = m + 1;
   const day = d + 1;
-  const { data, isLoading, isError } = useSolatMonth(zone, YEAR, month);
+  const { data, isLoading, isError } = useSolatMonth(zone, year, month);
 
   const prayer = data?.prayers.find((p) => p.day === day);
 

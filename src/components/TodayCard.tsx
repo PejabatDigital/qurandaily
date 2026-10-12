@@ -5,10 +5,8 @@ import { ZonePicker } from "@/components/takwim/ZonePicker";
 import { DayDetailSheet } from "@/components/takwim/DayDetailSheet";
 import { useSelectedZone, useSolatMonth } from "@/hooks/useSolat";
 import { PRAYER_LABELS, formatPrayerTime } from "@/lib/solat";
-import { todayInTakwim } from "@/lib/takwim";
-import { RAW, HIJRI_MONTHS, MONTHS_EN, DAY_EN } from "@/data/takwim2026";
-
-const YEAR = 2026;
+import { getDayEntry, todayInTakwim } from "@/lib/takwim";
+import { HIJRI_MONTHS, MONTHS_EN, DAY_EN } from "@/data/takwim";
 
 function useNow(intervalMs = 30_000) {
   const [now, setNow] = useState(() => new Date());
@@ -35,10 +33,11 @@ const TodayCard = () => {
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const todayDate = new Date();
+  const year = todayDate.getFullYear();
   const month = todayDate.getMonth() + 1;
   const day = todayDate.getDate();
 
-  const { data, isLoading, isError } = useSolatMonth(zone, YEAR, month);
+  const { data, isLoading, isError } = useSolatMonth(zone, year, month);
   const prayer = data?.prayers.find((p) => p.day === day);
 
   const nextPrayer = useMemo(() => {
@@ -54,15 +53,14 @@ const TodayCard = () => {
     return null;
   }, [prayer, now]);
 
-  const gregLine = today
-    ? `${DAY_EN[RAW[today.m][today.d][3]]}, ${today.d + 1} ${MONTHS_EN[today.m]} ${YEAR}`
+  const todayEntry = today ? getDayEntry(today) : null;
+
+  const gregLine = today && todayEntry
+    ? `${DAY_EN[todayEntry[3]]}, ${today.d + 1} ${MONTHS_EN[today.m]} ${today.year}`
     : todayDate.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 
-  const hijriLine = today
-    ? (() => {
-        const [hDay, hMonth, hYear] = RAW[today.m][today.d];
-        return `${hDay} ${HIJRI_MONTHS[hMonth]} ${hYear} H`;
-      })()
+  const hijriLine = todayEntry
+    ? `${todayEntry[0]} ${HIJRI_MONTHS[todayEntry[1]]} ${todayEntry[2]} H`
     : null;
 
   return (
@@ -119,7 +117,7 @@ const TodayCard = () => {
       </Card>
 
       <DayDetailSheet
-        selected={sheetOpen && today ? { m: today.m, d: today.d } : null}
+        selected={sheetOpen ? today : null}
         onOpenChange={setSheetOpen}
         highlightPrayer={nextPrayer?.key ?? null}
       />

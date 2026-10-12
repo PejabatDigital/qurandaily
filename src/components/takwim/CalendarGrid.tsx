@@ -1,33 +1,32 @@
 import { useEffect, useRef } from "react";
-import {
-  RAW, FIRST_DOW, HIJRI_MONTHS,
-} from "@/data/takwim2026";
-import { isNewHijriMonth, todayInTakwim } from "@/lib/takwim";
+import { HIJRI_MONTHS } from "@/data/takwim";
+import { isNewHijriMonth, todayInTakwim, type TakwimDay, type TakwimYear } from "@/lib/takwim";
 import { cn } from "@/lib/utils";
 
 const DOW_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-type Selected = { m: number; d: number } | null;
-
 export function CalendarGrid({
+  takwim,
   m,
   highlight,
   onSelect,
 }: {
+  takwim: TakwimYear;
   m: number;
-  highlight: Selected;
-  onSelect: (m: number, d: number) => void;
+  highlight: TakwimDay | null;
+  onSelect: (day: TakwimDay) => void;
 }) {
-  const data = RAW[m];
-  const firstDow = FIRST_DOW[m];
+  const { year } = takwim;
+  const data = takwim.days[m];
+  const firstDow = takwim.firstDow[m];
   const today = todayInTakwim();
   const cellRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   useEffect(() => {
-    if (highlight && highlight.m === m && cellRefs.current[highlight.d]) {
+    if (highlight && highlight.year === year && highlight.m === m && cellRefs.current[highlight.d]) {
       cellRefs.current[highlight.d]?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
-  }, [highlight, m]);
+  }, [highlight, year, m]);
 
   return (
     <section className="space-y-3">
@@ -52,16 +51,16 @@ export function CalendarGrid({
         {data.map((entry, d) => {
           const [hDay, hMonth, , dayCode] = entry;
           const gregDay = d + 1;
-          const isToday = today?.m === m && today?.d === d;
+          const isToday = today?.year === year && today.m === m && today.d === d;
           const isFri = dayCode === "J";
-          const isNew = isNewHijriMonth(m, d);
-          const isHighlight = highlight?.m === m && highlight?.d === d;
+          const isNew = isNewHijriMonth(takwim, m, d);
+          const isHighlight = highlight?.year === year && highlight.m === m && highlight.d === d;
 
           return (
             <button
               key={d}
               ref={(el) => { cellRefs.current[d] = el; }}
-              onClick={() => onSelect(m, d)}
+              onClick={() => onSelect({ year, m, d })}
               className={cn(
                 "group relative flex aspect-[1/1.1] flex-col items-center justify-center rounded-lg border border-transparent bg-card px-0.5 py-1.5 text-center transition-all hover:border-border hover:shadow-sm",
                 isToday && "border-primary/40 ring-1 ring-primary/15",

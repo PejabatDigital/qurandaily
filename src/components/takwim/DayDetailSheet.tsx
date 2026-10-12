@@ -1,31 +1,30 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { PrayerTimes } from "@/components/takwim/PrayerTimes";
 import { ZonePicker } from "@/components/takwim/ZonePicker";
-import { RAW, HIJRI_MONTHS, MONTHS_EN, DAY_EN } from "@/data/takwim2026";
-import { isNewHijriMonth } from "@/lib/takwim";
+import { HIJRI_MONTHS, MONTHS_EN, DAY_EN } from "@/data/takwim";
+import { getTakwimYear, isNewHijriMonth, type TakwimDay } from "@/lib/takwim";
 import { cn } from "@/lib/utils";
 import type { DayPrayer } from "@/lib/solat";
 
-type Selected = { m: number; d: number } | null;
-
 interface DayDetailSheetProps {
-  selected: Selected;
+  selected: TakwimDay | null;
   onOpenChange: (open: boolean) => void;
   highlightPrayer?: keyof Omit<DayPrayer, "day" | "hijri"> | null;
 }
 
 export function DayDetailSheet({ selected, onOpenChange, highlightPrayer }: DayDetailSheetProps) {
-  const open = !!selected;
+  const takwim = selected ? getTakwimYear(selected.year) : null;
+  const open = !!selected && !!takwim;
 
-  const detail = selected
+  const detail = selected && takwim
     ? {
         gregDay: selected.d + 1,
         gregMonth: MONTHS_EN[selected.m],
-        hDay: RAW[selected.m][selected.d][0],
-        hMonth: RAW[selected.m][selected.d][1],
-        hYear: RAW[selected.m][selected.d][2],
-        dayCode: RAW[selected.m][selected.d][3],
-        isNew: isNewHijriMonth(selected.m, selected.d),
+        hDay: takwim.days[selected.m][selected.d][0],
+        hMonth: takwim.days[selected.m][selected.d][1],
+        hYear: takwim.days[selected.m][selected.d][2],
+        dayCode: takwim.days[selected.m][selected.d][3],
+        isNew: isNewHijriMonth(takwim, selected.m, selected.d),
       }
     : null;
 
@@ -40,7 +39,7 @@ export function DayDetailSheet({ selected, onOpenChange, highlightPrayer }: DayD
           <div className="space-y-4 px-5 pt-4 pb-[max(5rem,env(safe-area-inset-bottom))]">
             <SheetHeader className="space-y-1 text-left">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                {DAY_EN[detail.dayCode]} · {detail.gregMonth} 2026
+                {DAY_EN[detail.dayCode]} · {detail.gregMonth} {selected.year}
               </p>
               <div className="flex items-baseline gap-3">
                 <SheetTitle className="text-5xl font-bold leading-none tracking-tight">
@@ -74,7 +73,7 @@ export function DayDetailSheet({ selected, onOpenChange, highlightPrayer }: DayD
                 </p>
                 <ZonePicker />
               </div>
-              <PrayerTimes m={selected.m} d={selected.d} highlightKey={highlightPrayer ?? null} />
+              <PrayerTimes year={selected.year} m={selected.m} d={selected.d} highlightKey={highlightPrayer ?? null} />
             </div>
           </div>
         )}
