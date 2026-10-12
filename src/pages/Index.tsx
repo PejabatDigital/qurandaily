@@ -1,23 +1,21 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Tables } from "@/integrations/supabase/types";
 import CircularProgress from "@/components/CircularProgress";
 import WeeklyChart from "@/components/WeeklyChart";
 import LogReadingDialog from "@/components/LogReadingDialog";
-import CreateCampaignDialog from "@/components/CreateCampaignDialog";
-import OnboardingDialog from "@/components/OnboardingDialog";
+import OnboardingFlow from "@/components/onboarding/OnboardingFlow";
 import AppMenu from "@/components/AppMenu";
 import TodayCard from "@/components/TodayCard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, BookOpen, Flame, Target, BookMarked, Menu, TrendingUp, RefreshCw, Clock, AlertTriangle } from "lucide-react";
+import { Plus, BookOpen, Flame, Target, Menu, TrendingUp, RefreshCw, Clock, AlertTriangle } from "lucide-react";
 import { getSurahForPage, TOTAL_PAGES } from "@/lib/quran-data";
 import { format, subDays, isToday, parseISO, isPast, endOfDay } from "date-fns";
 import { toast } from "sonner";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useCampaigns } from "@/hooks/useCampaigns";
 import { useReadingLogs } from "@/hooks/useReadingLogs";
 import { dueMilestones, loadShownMilestones, saveShownMilestones } from "@/lib/milestones";
@@ -27,33 +25,14 @@ const Index = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [logOpen, setLogOpen] = useState(false);
-  const [createOpen, setCreateOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
-  const [showOnboarding, setShowOnboarding] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const { data: campaigns = [], isLoading: campaignsLoading } = useCampaigns();
   const { data: logs = [], isLoading: logsLoading } = useReadingLogs();
 
-  const { data: displayName } = useQuery({
-    queryKey: ["profile_name", user?.id],
-    queryFn: async () => {
-      if (!user) return null;
-      const { data } = await supabase.from("profiles").select("display_name").eq("user_id", user.id).single();
-      return data?.display_name || null;
-    },
-    enabled: !!user,
-  });
-
   const isLoading = campaignsLoading || logsLoading;
-
-  // Show onboarding for new users
-  useEffect(() => {
-    if (!isLoading && campaigns.length === 0 && !displayName) {
-      setShowOnboarding(true);
-    }
-  }, [isLoading, campaigns.length, displayName]);
 
   // Auto-select active campaign
   useEffect(() => {
@@ -209,6 +188,11 @@ const Index = () => {
     );
   }
 
+  // No reading plan on this device (new, or every plan deleted): set one up.
+  if (campaigns.length === 0) {
+    return <OnboardingFlow onComplete={() => setSelectedCampaignId(null)} />;
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
@@ -241,17 +225,6 @@ const Index = () => {
 
       <main className="mx-auto max-w-lg px-4 pb-24 pt-6 space-y-6">
         <TodayCard />
-
-        {campaigns.length === 0 && (
-          <Card className="border-dashed">
-            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-              <BookMarked className="h-10 w-10 text-muted-foreground/50 mb-3" />
-              <p className="text-sm font-medium">No reading plans yet</p>
-              <p className="text-xs text-muted-foreground mb-4">Create your first reading goal to get started.</p>
-              <Button size="sm" onClick={() => setCreateOpen(true)}>Create reading plan</Button>
-            </CardContent>
-          </Card>
-        )}
 
         {activeCampaign && (
           <>
@@ -334,8 +307,6 @@ const Index = () => {
 
       <AppMenu open={menuOpen} onOpenChange={setMenuOpen} />
       <LogReadingDialog open={logOpen} onOpenChange={setLogOpen} campaign={activeCampaign} lastPageMarker={lastPageMarker} onLogged={handleDataChange} />
-      <CreateCampaignDialog open={createOpen} onOpenChange={setCreateOpen} onCreated={handleDataChange} />
-      <OnboardingDialog open={showOnboarding} onOpenChange={setShowOnboarding} onComplete={handleDataChange} />
     </div>
   );
 };
