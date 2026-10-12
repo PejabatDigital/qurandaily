@@ -240,13 +240,13 @@ const Index = () => {
       <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
         <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => setMenuOpen(true)}>
+            <Button variant="ghost" size="icon" onClick={() => setMenuOpen(true)} aria-label="Open menu">
               <Menu className="h-5 w-5" />
             </Button>
             <h1 className="text-lg font-bold tracking-tight">Quran Daily</h1>
           </div>
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" onClick={handleRefresh} disabled={isRefreshing} className="h-8 w-8">
+            <Button variant="ghost" size="icon" onClick={handleRefresh} disabled={isRefreshing} aria-label="Refresh">
               <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
             </Button>
             {campaigns.length > 1 && (
