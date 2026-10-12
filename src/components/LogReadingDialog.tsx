@@ -1,8 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import InputField from "@/components/InputField";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -24,6 +23,15 @@ const LogReadingDialog = ({ open, onOpenChange, campaign, lastPageMarker, onLogg
   const { toast } = useToast();
   const [currentPage, setCurrentPage] = useState("");
   const [pagesRead, setPagesRead] = useState("");
+  const [pageError, setPageError] = useState<string | null>(null);
+  const [countError, setCountError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) {
+      setPageError(null);
+      setCountError(null);
+    }
+  }, [open]);
 
   const logReading = useMutation({
     mutationFn: async (vars: { pagesRead: number; currentPageMarker: number; mode: "page" | "count" }) => {
@@ -55,7 +63,7 @@ const LogReadingDialog = ({ open, onOpenChange, campaign, lastPageMarker, onLogg
   const handleLogByPage = () => {
     const page = parseInt(currentPage);
     if (isNaN(page) || page < 1 || page > TOTAL_PAGES) {
-      toast({ title: "Invalid page", description: `Enter a page between 1 and ${TOTAL_PAGES}.`, variant: "destructive" });
+      setPageError(`Enter a page between 1 and ${TOTAL_PAGES}.`);
       return;
     }
     logReading.mutate({ pagesRead: Math.max(0, page - lastPageMarker), currentPageMarker: page, mode: "page" });
@@ -64,7 +72,7 @@ const LogReadingDialog = ({ open, onOpenChange, campaign, lastPageMarker, onLogg
   const handleLogByCount = () => {
     const count = parseInt(pagesRead);
     if (isNaN(count) || count < 1) {
-      toast({ title: "Invalid count", description: "Enter at least 1 page.", variant: "destructive" });
+      setCountError("Enter at least 1 page.");
       return;
     }
     logReading.mutate({ pagesRead: count, currentPageMarker: Math.min(lastPageMarker + count, TOTAL_PAGES), mode: "count" });
@@ -87,32 +95,30 @@ const LogReadingDialog = ({ open, onOpenChange, campaign, lastPageMarker, onLogg
             <TabsTrigger value="count">By Count</TabsTrigger>
           </TabsList>
           <TabsContent value="page" className="space-y-4 pt-2">
-            <div className="space-y-2">
-              <Label>What page are you on now?</Label>
-              <Input
-                type="number"
-                min={1}
-                max={TOTAL_PAGES}
-                placeholder="e.g. 42"
-                value={currentPage}
-                onChange={(e) => setCurrentPage(e.target.value)}
-              />
-            </div>
+            <InputField
+              label="What page are you on now?"
+              type="number"
+              min={1}
+              max={TOTAL_PAGES}
+              placeholder="e.g. 42"
+              value={currentPage}
+              error={pageError}
+              onChange={(e) => { setCurrentPage(e.target.value); setPageError(null); }}
+            />
             <Button onClick={handleLogByPage} disabled={logReading.isPending} className="w-full">
               Save
             </Button>
           </TabsContent>
           <TabsContent value="count" className="space-y-4 pt-2">
-            <div className="space-y-2">
-              <Label>How many pages did you read?</Label>
-              <Input
-                type="number"
-                min={1}
-                placeholder="e.g. 5"
-                value={pagesRead}
-                onChange={(e) => setPagesRead(e.target.value)}
-              />
-            </div>
+            <InputField
+              label="How many pages did you read?"
+              type="number"
+              min={1}
+              placeholder="e.g. 5"
+              value={pagesRead}
+              error={countError}
+              onChange={(e) => { setPagesRead(e.target.value); setCountError(null); }}
+            />
             <Button onClick={handleLogByCount} disabled={logReading.isPending} className="w-full">
               Save
             </Button>

@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import InputField from "@/components/InputField";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -25,6 +25,8 @@ const CreateCampaignDialog = ({ open, onOpenChange, onCreated, campaign }: Creat
   const [startSurah, setStartSurah] = useState("1");
   const [endSurah, setEndSurah] = useState("114");
   const [endDate, setEndDate] = useState("");
+  const [titleError, setTitleError] = useState<string | null>(null);
+  const [endDateError, setEndDateError] = useState<string | null>(null);
 
   const isEditing = !!campaign;
 
@@ -40,6 +42,8 @@ const CreateCampaignDialog = ({ open, onOpenChange, onCreated, campaign }: Creat
       setEndSurah("114");
       setEndDate("");
     }
+    setTitleError(null);
+    setEndDateError(null);
   }, [campaign, open]);
 
   const saveCampaign = useMutation({
@@ -65,9 +69,9 @@ const CreateCampaignDialog = ({ open, onOpenChange, onCreated, campaign }: Creat
     },
     onSuccess: (_data, vars) => {
       if (isEditing) {
-        toast({ title: "Campaign updated!" });
+        toast({ title: "Reading plan updated!" });
       } else {
-        toast({ title: "Campaign created!", description: `"${vars.title}" is now your active campaign.` });
+        toast({ title: "Reading plan created!", description: `"${vars.title}" is now your active reading plan.` });
         setTitle("");
         setStartSurah("1");
         setEndSurah("114");
@@ -83,8 +87,14 @@ const CreateCampaignDialog = ({ open, onOpenChange, onCreated, campaign }: Creat
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const trimmedTitle = title.trim();
+    const titleMissing = !trimmedTitle;
+    const endDateMissing = !endDate;
+    setTitleError(titleMissing ? "Give your reading plan a name." : null);
+    setEndDateError(endDateMissing ? "Pick a finish date." : null);
+    if (titleMissing || endDateMissing) return;
     saveCampaign.mutate({
-      title,
+      title: trimmedTitle,
       startPage: getStartPageForSurah(startSurah),
       endPage: getEndPageForSurah(endSurah),
       endDate,
@@ -95,16 +105,19 @@ const CreateCampaignDialog = ({ open, onOpenChange, onCreated, campaign }: Creat
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle>{isEditing ? "Edit Campaign" : "New Campaign"}</DialogTitle>
+          <DialogTitle>{isEditing ? "Edit reading plan" : "New reading plan"}</DialogTitle>
           <DialogDescription>
-            {isEditing ? "Update your campaign details." : "Create a reading goal to track your progress."}
+            {isEditing ? "Update your reading plan details." : "Create a reading goal to track your progress."}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label>Campaign Name</Label>
-            <Input placeholder="e.g. Ramadan 2026" value={title} onChange={(e) => setTitle(e.target.value)} required />
-          </div>
+        <form onSubmit={handleSubmit} noValidate className="space-y-4">
+          <InputField
+            label="Reading plan name"
+            placeholder="e.g. Ramadan khatam"
+            value={title}
+            error={titleError}
+            onChange={(e) => { setTitle(e.target.value); setTitleError(null); }}
+          />
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label>Start Surah</Label>
@@ -115,12 +128,15 @@ const CreateCampaignDialog = ({ open, onOpenChange, onCreated, campaign }: Creat
               <SurahSelect value={endSurah} onValueChange={setEndSurah} />
             </div>
           </div>
-          <div className="space-y-2">
-            <Label>End Date</Label>
-            <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} required />
-          </div>
+          <InputField
+            label="End Date"
+            type="date"
+            value={endDate}
+            error={endDateError}
+            onChange={(e) => { setEndDate(e.target.value); setEndDateError(null); }}
+          />
           <Button type="submit" className="w-full" disabled={saveCampaign.isPending}>
-            {saveCampaign.isPending ? "Saving..." : isEditing ? "Update Campaign" : "Create Campaign"}
+            {saveCampaign.isPending ? "Saving..." : isEditing ? "Update reading plan" : "Create reading plan"}
           </Button>
         </form>
       </DialogContent>
