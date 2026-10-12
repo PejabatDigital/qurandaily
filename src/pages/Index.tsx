@@ -5,13 +5,17 @@ import CircularProgress from "@/components/CircularProgress";
 import WeeklyChart from "@/components/WeeklyChart";
 import LogReadingDialog from "@/components/LogReadingDialog";
 import OnboardingFlow from "@/components/onboarding/OnboardingFlow";
+import CreateCampaignDialog from "@/components/CreateCampaignDialog";
+import TodayReadingCard from "@/components/home/TodayReadingCard";
+import CatchUpCard from "@/components/home/CatchUpCard";
+import PlanEndedCard from "@/components/home/PlanEndedCard";
 import AppMenu from "@/components/AppMenu";
 import TodayCard from "@/components/TodayCard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, BookOpen, Flame, Target, Menu, TrendingUp, RefreshCw, Clock, AlertTriangle } from "lucide-react";
+import { Plus, BookOpen, Flame, Target, Menu, TrendingUp, RefreshCw } from "lucide-react";
 import { getSurahForPage, TOTAL_PAGES } from "@/lib/quran-data";
 import { format, subDays, isToday, parseISO, isPast, endOfDay } from "date-fns";
 import { toast } from "sonner";
@@ -19,7 +23,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCampaigns } from "@/hooks/useCampaigns";
 import { useReadingLogs } from "@/hooks/useReadingLogs";
 import { dueMilestones, loadShownMilestones, saveShownMilestones } from "@/lib/milestones";
-import { dailyPace, daysInclusive } from "@/lib/plan";
+import { dailyPace, daysInclusive, pagesBehind } from "@/lib/plan";
+import { dismissCatchUp, isCatchUpDismissed } from "@/lib/catch-up";
 
 const Index = () => {
   const { user } = useAuth();
@@ -28,6 +33,9 @@ const Index = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [newPlanOpen, setNewPlanOpen] = useState(false);
+  const [extendOpen, setExtendOpen] = useState(false);
+  const [catchUpDismissedId, setCatchUpDismissedId] = useState<string | null>(null);
 
   const { data: campaigns = [], isLoading: campaignsLoading } = useCampaigns();
   const { data: logs = [], isLoading: logsLoading } = useReadingLogs();
@@ -82,6 +90,8 @@ const Index = () => {
     pagesReadToday,
     daysRemaining,
     dailyTarget,
+    pagesRemaining,
+    behind,
     streak,
     chartData7,
     chartData30,
@@ -100,6 +110,15 @@ const Index = () => {
     const daysRemaining = activeCampaign ? daysInclusive(new Date(), parseISO(activeCampaign.end_date)) : 1;
     const pagesRemaining = totalPages - pagesRead;
     const dailyTarget = isCampaignExpired ? 0 : dailyPace(pagesRemaining, daysRemaining);
+    const behind = activeCampaign
+      ? pagesBehind({
+          totalPages,
+          pagesRead,
+          startDate: parseISO(activeCampaign.start_date),
+          endDate: parseISO(activeCampaign.end_date),
+          today: new Date(),
+        })
+      : 0;
 
     let streak = 0;
     if (campaignLogs.length > 0) {
@@ -127,6 +146,8 @@ const Index = () => {
       pagesReadToday,
       daysRemaining,
       dailyTarget,
+      pagesRemaining: Math.max(0, pagesRemaining),
+      behind,
       streak,
       chartData7: buildChartData(7, "EEE"),
       chartData30: buildChartData(30, "d MMM"),
@@ -193,6 +214,33 @@ const Index = () => {
     return <OnboardingFlow onComplete={() => setSelectedCampaignId(null)} />;
   }
 
+  // "Start a new plan": the set-up flow without the welcome screen.
+  if (newPlanOpen) {
+    return (
+      <OnboardingFlow
+        startAt="goal"
+        onExit={() => setNewPlanOpen(false)}
+        onComplete={() => {
+          setNewPlanOpen(false);
+          setSelectedCampaignId(null);
+        }}
+      />
+    );
+  }
+
+  const isComplete = percentage >= 100;
+  const hasLogs = campaignLogs.length > 0;
+  const showFirstLog = !!activeCampaign && !isCampaignExpired && !hasLogs;
+  const showCatchUp =
+    !!activeCampaign &&
+    !isCampaignExpired &&
+    hasLogs &&
+    !isComplete &&
+    behind >= 1 &&
+    catchUpDismissedId !== activeCampaign.id &&
+    !isCatchUpDismissed(activeCampaign.id);
+  const showPlanEnded = !!activeCampaign && isCampaignExpired && !isComplete;
+
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
@@ -224,22 +272,49 @@ const Index = () => {
       </header>
 
       <main className="mx-auto max-w-lg px-4 pb-24 pt-6 space-y-6">
+        {showCatchUp && activeCampaign && (
+          <CatchUpCard
+            pagesBehind={behind}
+            dailyTarget={dailyTarget}
+            endDate={parseISO(activeCampaign.end_date)}
+            onLog={() => setLogOpen(true)}
+            onDismiss={() => {
+              dismissCatchUp(activeCampaign.id);
+              setCatchUpDismissedId(activeCampaign.id);
+            }}
+          />
+        )}
+
+        {showPlanEnded && activeCampaign && (
+          <PlanEndedCard
+            endDate={parseISO(activeCampaign.end_date)}
+            page={lastPageMarker}
+            endPage={activeCampaign.end_page}
+            percentage={percentage}
+            pagesRemaining={pagesRemaining}
+            wholeQuran={activeCampaign.start_page === 1 && activeCampaign.end_page === TOTAL_PAGES}
+            onExtend={() => setExtendOpen(true)}
+            onNewPlan={() => setNewPlanOpen(true)}
+          />
+        )}
+
         <TodayCard />
+
+        {showFirstLog && (
+          <TodayReadingCard pagesToday={pagesReadToday} dailyTarget={dailyTarget} onLog={() => setLogOpen(true)} />
+        )}
 
         {activeCampaign && (
           <>
             <div className="flex flex-col items-center space-y-2">
               <CircularProgress percentage={percentage} />
               <p className="text-sm text-muted-foreground">
-                Page {lastPageMarker} — <span className="font-medium">{getSurahForPage(lastPageMarker)}</span>
+                Page {lastPageMarker}, {getSurahForPage(lastPageMarker)}
               </p>
-              <p className={`flex items-center gap-1.5 text-xs ${isCampaignExpired ? "text-destructive" : "text-muted-foreground/80"}`}>
-                {isCampaignExpired ? <AlertTriangle className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
-                <span>
-                  {activeCampaign.title} · {isCampaignExpired
-                    ? `Ended ${format(parseISO(activeCampaign.end_date), "MMM d, yyyy")}`
-                    : `Ends ${format(parseISO(activeCampaign.end_date), "MMM d")} · ${daysRemaining} day${daysRemaining !== 1 ? "s" : ""} left`}
-                </span>
+              <p className="text-xs text-muted-foreground">
+                {activeCampaign.title} · {isCampaignExpired
+                  ? `ended ${format(parseISO(activeCampaign.end_date), "d MMM")}`
+                  : `ends ${format(parseISO(activeCampaign.end_date), "d MMM")} · ${daysRemaining} day${daysRemaining !== 1 ? "s" : ""} left`}
               </p>
             </div>
 
@@ -262,7 +337,7 @@ const Index = () => {
                   </div>
                   <div>
                     <p className="text-xl font-bold">{pagesRead}</p>
-                    <p className="text-xs text-muted-foreground">Total Read</p>
+                    <p className="text-xs text-muted-foreground">Total read</p>
                   </div>
                 </CardContent>
               </Card>
@@ -272,8 +347,8 @@ const Index = () => {
                     <Target className="h-4 w-4 text-primary" />
                   </div>
                   <div>
-                    <p className="text-xl font-bold">{dailyTarget}</p>
-                    <p className="text-xs text-muted-foreground">Pages/Day</p>
+                    <p className="text-xl font-bold">{isCampaignExpired ? "–" : dailyTarget}</p>
+                    <p className="text-xs text-muted-foreground">Pages/day</p>
                   </div>
                 </CardContent>
               </Card>
@@ -284,7 +359,7 @@ const Index = () => {
                   </div>
                   <div>
                     <p className="text-xl font-bold">{streak}</p>
-                    <p className="text-xs text-muted-foreground">Day Streak</p>
+                    <p className="text-xs text-muted-foreground">Day streak</p>
                   </div>
                 </CardContent>
               </Card>
@@ -295,7 +370,7 @@ const Index = () => {
         )}
       </main>
 
-      {activeCampaign && !isCampaignExpired && (
+      {activeCampaign && !isCampaignExpired && !showFirstLog && (
         <button
           onClick={() => setLogOpen(true)}
           className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 active:scale-95"
@@ -306,6 +381,13 @@ const Index = () => {
       )}
 
       <AppMenu open={menuOpen} onOpenChange={setMenuOpen} />
+      <CreateCampaignDialog
+        open={extendOpen}
+        onOpenChange={setExtendOpen}
+        onCreated={handleDataChange}
+        campaign={activeCampaign}
+        focusEndDate
+      />
       <LogReadingDialog open={logOpen} onOpenChange={setLogOpen} campaign={activeCampaign} lastPageMarker={lastPageMarker} onLogged={handleDataChange} />
     </div>
   );
