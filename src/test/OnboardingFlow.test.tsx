@@ -90,6 +90,7 @@ describe("OnboardingFlow", () => {
           title: "Full Quran (khatam)",
           start_page: 1,
           end_page: 604,
+          start_date: "2026-10-12",
           end_date: "2026-11-10",
           is_active: true,
         },

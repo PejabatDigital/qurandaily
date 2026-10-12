@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -16,9 +17,11 @@ interface CreateCampaignDialogProps {
   onOpenChange: (open: boolean) => void;
   onCreated: () => void;
   campaign?: Tables<"campaigns"> | null;
+  /** Open with the finish date focused (e.g. "Extend finish date"). */
+  focusEndDate?: boolean;
 }
 
-const CreateCampaignDialog = ({ open, onOpenChange, onCreated, campaign }: CreateCampaignDialogProps) => {
+const CreateCampaignDialog = ({ open, onOpenChange, onCreated, campaign, focusEndDate }: CreateCampaignDialogProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [title, setTitle] = useState("");
@@ -27,6 +30,7 @@ const CreateCampaignDialog = ({ open, onOpenChange, onCreated, campaign }: Creat
   const [endDate, setEndDate] = useState("");
   const [titleError, setTitleError] = useState<string | null>(null);
   const [endDateError, setEndDateError] = useState<string | null>(null);
+  const endDateRef = useRef<HTMLInputElement>(null);
 
   const isEditing = !!campaign;
 
@@ -61,6 +65,7 @@ const CreateCampaignDialog = ({ open, onOpenChange, onCreated, campaign }: Creat
           title: vars.title,
           start_page: vars.startPage,
           end_page: vars.endPage,
+          start_date: format(new Date(), "yyyy-MM-dd"),
           end_date: vars.endDate,
           is_active: true,
         });
@@ -93,17 +98,28 @@ const CreateCampaignDialog = ({ open, onOpenChange, onCreated, campaign }: Creat
     setTitleError(titleMissing ? "Give your reading plan a name." : null);
     setEndDateError(endDateMissing ? "Pick a finish date." : null);
     if (titleMissing || endDateMissing) return;
+    // Keep the plan's exact pages unless a different surah was picked: a plan
+    // can start mid-surah (e.g. "I'm already reading" from page 214).
+    const keepStart = campaign && startSurah === getSurahNumberForPage(campaign.start_page);
+    const keepEnd = campaign && endSurah === getSurahNumberForPage(campaign.end_page);
     saveCampaign.mutate({
       title: trimmedTitle,
-      startPage: getStartPageForSurah(startSurah),
-      endPage: getEndPageForSurah(endSurah),
+      startPage: keepStart ? campaign.start_page : getStartPageForSurah(startSurah),
+      endPage: keepEnd ? campaign.end_page : getEndPageForSurah(endSurah),
       endDate,
     });
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent
+        className="sm:max-w-sm"
+        onOpenAutoFocus={(e) => {
+          if (!focusEndDate) return;
+          e.preventDefault();
+          endDateRef.current?.focus();
+        }}
+      >
         <DialogHeader>
           <DialogTitle>{isEditing ? "Edit reading plan" : "New reading plan"}</DialogTitle>
           <DialogDescription>
@@ -129,6 +145,7 @@ const CreateCampaignDialog = ({ open, onOpenChange, onCreated, campaign }: Creat
             </div>
           </div>
           <InputField
+            ref={endDateRef}
             label="End Date"
             type="date"
             value={endDate}

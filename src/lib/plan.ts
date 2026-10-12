@@ -60,6 +60,25 @@ export function pagesToGo(startPage: number, endPage: number): number {
   return Math.max(0, endPage - startPage + 1);
 }
 
+/**
+ * Pages behind a straight-line schedule: how much should have been read by
+ * the end of yesterday (spreading the plan evenly from its start date to its
+ * finish date, both inclusive) minus what has been read, rounded. Zero or
+ * negative means on track or ahead.
+ */
+export function pagesBehind(opts: {
+  totalPages: number;
+  pagesRead: number;
+  startDate: Date;
+  endDate: Date;
+  today: Date;
+}): number {
+  const totalDays = daysInclusive(opts.startDate, opts.endDate);
+  const daysBeforeToday = Math.min(totalDays, Math.max(0, differenceInCalendarDays(opts.today, opts.startDate)));
+  const expected = (opts.totalPages * daysBeforeToday) / totalDays;
+  return Math.round(expected - opts.pagesRead);
+}
+
 /** "1 page" / "5 pages" */
 export function pagesLabel(n: number): string {
   return `${n} ${n === 1 ? "page" : "pages"}`;

@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { format } from "date-fns";
 import {
   JUZ_AMMA_START_PAGE, dailyPace, daysInclusive, finishAfterDays, finishAfterYears,
-  goalPages, goalTitle, pagesLabel, pagesPerPrayer, pagesToGo,
+  goalPages, goalTitle, pagesBehind, pagesLabel, pagesPerPrayer, pagesToGo,
 } from "@/lib/plan";
 import { endOfRamadan } from "@/lib/takwim";
 
@@ -98,5 +98,29 @@ describe("endOfRamadan", () => {
   it("returns null when the takwim data doesn't cover the next Ramadan", () => {
     expect(endOfRamadan(new Date(2027, 2, 10))).toBeNull();
     expect(endOfRamadan(new Date(2099, 0, 1))).toBeNull();
+  });
+});
+
+describe("pagesBehind", () => {
+  const plan = { totalPages: 604, startDate: new Date(2026, 9, 1), endDate: new Date(2026, 9, 30) };
+
+  it("compares pages read with the even schedule up to the end of yesterday", () => {
+    // 11 of 30 days done by the end of 11 Oct: 604 * 11 / 30 = 221.47 pages expected
+    expect(pagesBehind({ ...plan, pagesRead: 200, today: MON_12_OCT })).toBe(21);
+    expect(pagesBehind({ ...plan, pagesRead: 220, today: MON_12_OCT })).toBe(1);
+    expect(pagesBehind({ ...plan, pagesRead: 221, today: MON_12_OCT })).toBe(0);
+  });
+
+  it("is zero or negative when on track or ahead", () => {
+    expect(pagesBehind({ ...plan, pagesRead: 222, today: MON_12_OCT })).toBeLessThanOrEqual(0);
+    expect(pagesBehind({ ...plan, pagesRead: 400, today: MON_12_OCT })).toBeLessThan(0);
+  });
+
+  it("expects nothing on the first day", () => {
+    expect(pagesBehind({ ...plan, pagesRead: 0, today: new Date(2026, 9, 1, 20) })).toBe(0);
+  });
+
+  it("never expects more than the whole plan", () => {
+    expect(pagesBehind({ ...plan, pagesRead: 600, today: new Date(2026, 11, 1) })).toBe(4);
   });
 });

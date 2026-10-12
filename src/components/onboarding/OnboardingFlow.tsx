@@ -87,6 +87,8 @@ const OnboardingFlow = ({ startAt = "welcome", onExit, onComplete }: OnboardingF
         title: plan.title,
         start_page: plan.startPage,
         end_page: plan.goalEnd,
+        // Local date: the column's default is the database's (UTC) date.
+        start_date: toDateInput(today),
         end_date: toDateInput(plan.finishDate),
         is_active: true,
       });
