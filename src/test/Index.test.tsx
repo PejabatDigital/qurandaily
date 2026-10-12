@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, cleanup, within } from "@testing-library/react";
+import { render, screen, fireEvent, cleanup, within, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -13,7 +13,10 @@ vi.mock("@/contexts/AuthContext", () => ({
 }));
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
-    from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null }) }) }) }),
+    from: () => ({
+      select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null }) }) }),
+      insert: async () => ({ error: null }),
+    }),
   },
 }));
 vi.mock("@/hooks/useCampaigns", () => ({ useCampaigns: () => ({ data: data.campaigns, isLoading: false }) }));
@@ -145,5 +148,68 @@ describe("Home", () => {
     data.logs = [log(10, 592, "2026-10-09T03:00:00Z")];
     renderHome();
     expect(screen.getByText(/That's 43% of your plan\. 13 pages to go\./)).toBeInTheDocument();
+  });
+
+  it("celebrates the first log with a sheet instead of a toast", async () => {
+    data.campaigns = [plan({ start_date: "2026-10-12", end_date: "2026-11-10" })];
+    renderHome();
+    fireEvent.click(screen.getByRole("button", { name: /Log your first reading/ }));
+    fireEvent.change(screen.getByLabelText("How many pages did you read?"), { target: { value: "5" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(await screen.findByText("First reading logged")).toBeInTheDocument();
+    expect(screen.getByText("5 pages. You're now on page 6, Al-Baqarah.")).toBeInTheDocument();
+    expect(screen.getByText("Day 1 of your streak")).toBeInTheDocument();
+    expect(screen.getByText("16 more pages today keeps you on track.")).toBeInTheDocument();
+    expect(screen.queryByText("Logged!")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Done" }));
+    await waitFor(() => expect(screen.queryByText("First reading logged")).not.toBeInTheDocument());
+  });
+
+  it("hides the on-track line when the first log meets today's target", async () => {
+    data.campaigns = [plan({ start_date: "2026-10-12", end_date: "2026-11-10" })];
+    renderHome();
+    fireEvent.click(screen.getByRole("button", { name: /Log your first reading/ }));
+    fireEvent.change(screen.getByLabelText("How many pages did you read?"), { target: { value: "25" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    expect(await screen.findByText("First reading logged")).toBeInTheDocument();
+    expect(screen.queryByText(/keeps you on track/)).not.toBeInTheDocument();
+  });
+
+  it("celebrates a completed khatam once", () => {
+    data.campaigns = [plan({ start_date: "2026-09-13", end_date: "2026-10-30" })];
+    data.logs = [
+      log(304, 605, "2026-10-12T01:00:00Z"),
+      log(100, 301, "2026-10-11T01:00:00Z"),
+      log(100, 201, "2026-10-10T01:00:00Z"),
+      log(100, 101, "2026-10-01T01:00:00Z"),
+    ];
+    renderHome();
+    expect(screen.getByText("Khatam complete")).toBeInTheDocument();
+    expect(
+      screen.getByText("You read all 604 pages in 30 days. MashaAllah, may it be accepted from you."),
+    ).toBeInTheDocument();
+    const stat = (label: string) => screen.getByText(label).nextElementSibling!.textContent;
+    expect(stat("days")).toBe("30");
+    expect(stat("pages a day")).toBe("20");
+    expect(stat("best streak")).toBe("3");
+
+    fireEvent.click(screen.getByRole("button", { name: "Back to home" }));
+    expect(screen.getByText("Page 604, An-Nas")).toBeInTheDocument();
+    cleanup();
+    renderHome();
+    expect(screen.queryByText("Khatam complete")).not.toBeInTheDocument();
+  });
+
+  it("says \u201creading plan complete\u201d for part of the Quran, and starts the next plan at the goal step", () => {
+    // A separate plan id: shown milestones are also remembered in memory for the session.
+    data.campaigns = [plan({ id: "plan-2", title: "Juz Amma (Juz 30)", start_page: 582, start_date: "2026-10-12" })];
+    data.logs = [{ ...log(23, 605, "2026-10-12T01:00:00Z"), campaign_id: "plan-2" }];
+    renderHome();
+    expect(screen.getByText("Reading plan complete")).toBeInTheDocument();
+    expect(screen.getByText(/You read all 23 pages in 1 day\./)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Start a new plan" }));
+    expect(screen.getByText("What would you like to read?")).toBeInTheDocument();
   });
 });

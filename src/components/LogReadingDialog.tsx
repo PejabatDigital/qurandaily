@@ -16,10 +16,13 @@ interface LogReadingDialogProps {
   onOpenChange: (open: boolean) => void;
   campaign: Tables<"campaigns"> | null;
   lastPageMarker: number;
-  onLogged: () => void;
+  /** Called after saving with what was logged. */
+  onLogged: (logged: { pagesRead: number; nextMarker: number }) => void;
+  /** Skip the "Logged!" toast (the caller celebrates instead). */
+  quiet?: boolean;
 }
 
-const LogReadingDialog = ({ open, onOpenChange, campaign, lastPageMarker, onLogged }: LogReadingDialogProps) => {
+const LogReadingDialog = ({ open, onOpenChange, campaign, lastPageMarker, onLogged, quiet }: LogReadingDialogProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [currentPage, setCurrentPage] = useState("");
@@ -47,14 +50,16 @@ const LogReadingDialog = ({ open, onOpenChange, campaign, lastPageMarker, onLogg
     },
     onSuccess: (_data, vars) => {
       const lastRead = vars.currentPageMarker - 1;
-      toast({
-        title: "Logged!",
-        description: `${pagesLabel(vars.pagesRead)} recorded. Last read: page ${lastRead}, ${getSurahForPage(lastRead)}.`,
-      });
+      if (!quiet) {
+        toast({
+          title: "Logged!",
+          description: `${pagesLabel(vars.pagesRead)} recorded. Last read: page ${lastRead}, ${getSurahForPage(lastRead)}.`,
+        });
+      }
       if (vars.mode === "page") setCurrentPage("");
       else setPagesRead("");
       onOpenChange(false);
-      onLogged();
+      onLogged({ pagesRead: vars.pagesRead, nextMarker: vars.currentPageMarker });
     },
     onError: (error: Error) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });

@@ -9,6 +9,8 @@ import CreateCampaignDialog from "@/components/CreateCampaignDialog";
 import TodayReadingCard from "@/components/home/TodayReadingCard";
 import CatchUpCard from "@/components/home/CatchUpCard";
 import PlanEndedCard from "@/components/home/PlanEndedCard";
+import FirstLogSheet, { type FirstLog } from "@/components/home/FirstLogSheet";
+import KhatamCelebration, { type Completion } from "@/components/home/KhatamCelebration";
 import AppMenu from "@/components/AppMenu";
 import TodayCard from "@/components/TodayCard";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,7 +25,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCampaigns } from "@/hooks/useCampaigns";
 import { useReadingLogs } from "@/hooks/useReadingLogs";
 import { dueMilestones, loadShownMilestones, saveShownMilestones } from "@/lib/milestones";
-import { dailyPace, daysInclusive, displayPage, pagesBehind } from "@/lib/plan";
+import { bestStreak, daysInclusive, displayPage, isKhatamPlan, pagesBehind, todayTarget } from "@/lib/plan";
 import { dismissCatchUp, isCatchUpDismissed } from "@/lib/catch-up";
 
 const Index = () => {
@@ -36,6 +38,8 @@ const Index = () => {
   const [newPlanOpen, setNewPlanOpen] = useState(false);
   const [extendOpen, setExtendOpen] = useState(false);
   const [catchUpDismissedId, setCatchUpDismissedId] = useState<string | null>(null);
+  const [firstLog, setFirstLog] = useState<FirstLog | null>(null);
+  const [completion, setCompletion] = useState<Completion | null>(null);
 
   const { data: campaigns = [], isLoading: campaignsLoading } = useCampaigns();
   const { data: logs = [], isLoading: logsLoading } = useReadingLogs();
@@ -91,6 +95,7 @@ const Index = () => {
     daysRemaining,
     dailyTarget,
     pagesRemaining,
+    totalPages,
     behind,
     streak,
     chartData7,
@@ -109,7 +114,7 @@ const Index = () => {
     const pagesReadToday = todayLogs.reduce((sum, l) => sum + l.pages_read, 0);
     const daysRemaining = activeCampaign ? daysInclusive(new Date(), parseISO(activeCampaign.end_date)) : 1;
     const pagesRemaining = totalPages - pagesRead;
-    const dailyTarget = isCampaignExpired ? 0 : dailyPace(pagesRemaining, daysRemaining);
+    const dailyTarget = isCampaignExpired ? 0 : todayTarget({ totalPages, pagesRead, pagesReadToday, daysRemaining });
     const behind = activeCampaign
       ? pagesBehind({
           totalPages,
@@ -147,6 +152,7 @@ const Index = () => {
       daysRemaining,
       dailyTarget,
       pagesRemaining: Math.max(0, pagesRemaining),
+      totalPages,
       behind,
       streak,
       chartData7: buildChartData(7, "EEE"),
@@ -154,7 +160,8 @@ const Index = () => {
     };
   }, [activeCampaign, logs, campaignEndDate, isCampaignExpired]);
 
-  // Milestone toasts, each shown once per reading plan on this device
+  // Milestones, each shown once per reading plan on this device. Reaching
+  // 100% gets the full-screen celebration instead of a toast.
   useEffect(() => {
     if (!activeCampaign || isLoading) return;
     const shown = loadShownMilestones(activeCampaign.id);
@@ -162,9 +169,32 @@ const Index = () => {
     if (markShown.length === 0) return;
     saveShownMilestones(activeCampaign.id, new Set([...shown, ...markShown]));
     for (const m of show) {
-      toast.success(m.message, m.key === "complete" ? { duration: 8000 } : undefined);
+      if (m.key === "complete") {
+        const finishedOn = campaignLogs[0] ? parseISO(campaignLogs[0].created_at) : new Date();
+        setCompletion({
+          khatam: isKhatamPlan(activeCampaign),
+          pages: totalPages,
+          days: daysInclusive(parseISO(activeCampaign.start_date), finishedOn),
+          bestStreak: bestStreak(campaignLogs.map((l) => parseISO(l.created_at))),
+        });
+      } else {
+        toast.success(m.message);
+      }
     }
-  }, [streak, percentage, activeCampaign, isLoading]);
+  }, [streak, percentage, activeCampaign, isLoading, campaignLogs, totalPages]);
+
+  const handleLogged = (logged: { pagesRead: number; nextMarker: number }) => {
+    // The very first log on a plan gets a celebration sheet instead of the
+    // toast, unless it finishes the plan outright (that has its own screen).
+    if (activeCampaign && campaignLogs.length === 0 && logged.pagesRead < totalPages) {
+      setFirstLog({
+        pagesRead: logged.pagesRead,
+        page: displayPage(logged.nextMarker, activeCampaign.end_page),
+        remainingToday: Math.max(0, dailyTarget - logged.pagesRead),
+      });
+    }
+    handleDataChange();
+  };
 
   if (isLoading) {
     return (
@@ -212,6 +242,19 @@ const Index = () => {
   // No reading plan on this device (new, or every plan deleted): set one up.
   if (campaigns.length === 0) {
     return <OnboardingFlow onComplete={() => setSelectedCampaignId(null)} />;
+  }
+
+  if (completion) {
+    return (
+      <KhatamCelebration
+        completion={completion}
+        onStartNext={() => {
+          setCompletion(null);
+          setNewPlanOpen(true);
+        }}
+        onHome={() => setCompletion(null)}
+      />
+    );
   }
 
   // "Start a new plan": the set-up flow without the welcome screen.
@@ -389,7 +432,15 @@ const Index = () => {
         campaign={activeCampaign}
         focusEndDate
       />
-      <LogReadingDialog open={logOpen} onOpenChange={setLogOpen} campaign={activeCampaign} lastPageMarker={lastPageMarker} onLogged={handleDataChange} />
+      <LogReadingDialog
+        open={logOpen}
+        onOpenChange={setLogOpen}
+        campaign={activeCampaign}
+        lastPageMarker={lastPageMarker}
+        onLogged={handleLogged}
+        quiet={campaignLogs.length === 0}
+      />
+      <FirstLogSheet log={firstLog} onClose={() => setFirstLog(null)} />
     </div>
   );
 };

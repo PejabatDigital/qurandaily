@@ -1,5 +1,5 @@
 // Reading plan maths shared by onboarding and the home screen.
-import { addDays, addYears, differenceInCalendarDays, startOfDay } from "date-fns";
+import { addDays, addYears, differenceInCalendarDays, format, startOfDay } from "date-fns";
 import { SURAHS, TOTAL_PAGES, getEndPageForSurah, getStartPageForSurah } from "@/lib/quran-data";
 
 /** Calendar days from `from` to `to`, counting both ends (minimum 1). */
@@ -96,6 +96,39 @@ export function logFromCount(marker: number, count: number, endPage: number): { 
 /** The page to show for a marker: once the plan is finished, its last page. */
 export function displayPage(marker: number, endPage: number): number {
   return Math.min(marker, endPage);
+}
+
+/**
+ * Today's target: pages a day from what was left at the start of today, so it
+ * stays the same while the reader logs through the day.
+ */
+export function todayTarget(opts: {
+  totalPages: number;
+  pagesRead: number;
+  pagesReadToday: number;
+  daysRemaining: number;
+}): number {
+  return dailyPace(opts.totalPages - (opts.pagesRead - opts.pagesReadToday), opts.daysRemaining);
+}
+
+/** Longest run of consecutive calendar days with at least one log. */
+export function bestStreak(logDates: Date[]): number {
+  const days = [...new Set(logDates.map((d) => format(d, "yyyy-MM-dd")))].sort();
+  let best = 0;
+  let run = 0;
+  let previous: Date | null = null;
+  for (const day of days) {
+    const date = new Date(`${day}T00:00:00`);
+    run = previous && differenceInCalendarDays(date, previous) === 1 ? run + 1 : 1;
+    best = Math.max(best, run);
+    previous = date;
+  }
+  return best;
+}
+
+/** Finishing this plan completes the whole Quran (a khatam), not just a part of it. */
+export function isKhatamPlan(plan: { start_page: number; end_page: number; title: string }): boolean {
+  return plan.end_page === TOTAL_PAGES && (plan.start_page === 1 || plan.title === GOAL_LABELS.full);
 }
 
 /** "1 page" / "5 pages" */

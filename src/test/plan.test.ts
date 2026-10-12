@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { format } from "date-fns";
 import {
   JUZ_AMMA_START_PAGE, dailyPace, daysInclusive, finishAfterDays, finishAfterYears,
-  displayPage, goalPages, goalTitle, logFromCount, logFromLastPage, pagesBehind, pagesLabel, pagesPerPrayer, pagesToGo,
+  bestStreak, displayPage, goalPages, isKhatamPlan, todayTarget, goalTitle, logFromCount, logFromLastPage, pagesBehind, pagesLabel, pagesPerPrayer, pagesToGo,
 } from "@/lib/plan";
 import { endOfRamadan } from "@/lib/takwim";
 
@@ -153,5 +153,39 @@ describe("logging", () => {
   it("shows the plan's last page once finished", () => {
     expect(displayPage(605, 604)).toBe(604);
     expect(displayPage(142, 604)).toBe(142);
+  });
+});
+
+describe("todayTarget", () => {
+  it("stays fixed while logging through the day", () => {
+    const base = { totalPages: 604, daysRemaining: 30 };
+    expect(todayTarget({ ...base, pagesRead: 0, pagesReadToday: 0 })).toBe(21);
+    // After logging 5 pages today the target is still 21 (16 to go), not ceil(599 / 30) = 20.
+    expect(todayTarget({ ...base, pagesRead: 5, pagesReadToday: 5 })).toBe(21);
+    // Earlier days' reading lowers it.
+    expect(todayTarget({ ...base, pagesRead: 34, pagesReadToday: 0 })).toBe(19);
+  });
+});
+
+describe("bestStreak", () => {
+  it("finds the longest run of consecutive days", () => {
+    const d = (day: number, hour = 9) => new Date(2026, 9, day, hour);
+    expect(bestStreak([])).toBe(0);
+    expect(bestStreak([d(1)])).toBe(1);
+    expect(bestStreak([d(1), d(1, 21), d(2), d(3), d(5), d(6)])).toBe(3);
+    expect(bestStreak([d(6), d(5), d(4), d(4), d(1)])).toBe(3);
+  });
+
+  it("counts across month ends", () => {
+    expect(bestStreak([new Date(2026, 9, 31), new Date(2026, 10, 1)])).toBe(2);
+  });
+});
+
+describe("isKhatamPlan", () => {
+  it("is a khatam when the plan reaches the end of the Quran from the start, or as a full-Quran goal", () => {
+    expect(isKhatamPlan({ start_page: 1, end_page: 604, title: "Ramadan" })).toBe(true);
+    expect(isKhatamPlan({ start_page: 214, end_page: 604, title: "Full Quran (khatam)" })).toBe(true);
+    expect(isKhatamPlan({ start_page: 582, end_page: 604, title: "Juz Amma (Juz 30)" })).toBe(false);
+    expect(isKhatamPlan({ start_page: 1, end_page: 49, title: "Al-Fatihah – Al-Baqarah" })).toBe(false);
   });
 });
