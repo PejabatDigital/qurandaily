@@ -31,7 +31,7 @@ describe("Calendar page", () => {
   it("can move back from a year without data to the latest year with data", () => {
     renderAt(new Date(2099, 0, 15));
     fireEvent.click(screen.getByLabelText("Previous month"));
-    expect(screen.getByText(`December ${TAKWIM_YEARS.at(-1)}`)).toBeInTheDocument();
+    expect(screen.getByText(`December ${TAKWIM_YEARS[TAKWIM_YEARS.length - 1]}`)).toBeInTheDocument();
   });
 
   it("stops at the first month with data", () => {
