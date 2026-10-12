@@ -1,8 +1,20 @@
 # Quran Daily
 
-A minimalist Quran reading progress tracker. Set a reading campaign (goal + deadline), log your daily pages, and track your streak and pace — plus a Malaysia-focused prayer times / Hijri calendar (Takwim) view.
+A minimalist Quran reading progress tracker. Set a reading plan (goal + finish date), log your daily pages, and track your streak and pace — plus a Malaysia-focused prayer times / Hijri calendar (Takwim) view.
 
 Live at [qurandaily.kasahkod.cc](https://qurandaily.kasahkod.cc/).
+
+## User flow
+
+1. **Sign-in is silent.** Each browser gets an anonymous Supabase session, so there's no sign-up. Progress is saved per device and browser.
+2. **Set-up** (`src/components/onboarding/`). Anyone without a reading plan on this device sees the welcome screen, then four steps: goal (full Quran, Juz Amma or a surah range), finish date (30/60 days, End of Ramadan from the JAKIM takwim, 1 year or a picked date, with a live pages-a-day estimate), starting page, and an optional name and prayer zone. "Start reading" creates the plan and opens home.
+3. **Home** (`src/pages/Index.tsx`) shows today's date, Hijri date and next prayer, the plan's progress ring, and stats. Depending on the plan, it also shows:
+   - **First log:** a "Today's reading" card until the first reading is logged.
+   - **Catch-up:** a calm card when the reader is behind an even schedule, dismissable for the day.
+   - **Plan ended:** a card to extend the finish date or start a new plan (set-up from the goal step).
+4. **Logging** (the + button) is by count ("How many pages did you read?") or by page ("What is the last page you read?"). The first log on a plan opens a celebration sheet. Reaching 100% shows a full-screen "Khatam complete" (or "Reading plan complete") screen once per plan.
+
+A plan's position is the next page to read. Reading the plan's last page completes it. The daily target is `ceil(pages left at the start of today / days left including today)`, from `src/lib/plan.ts`. In the code, database and routes, reading plans are still called "campaigns".
 
 ## Tech stack
 
