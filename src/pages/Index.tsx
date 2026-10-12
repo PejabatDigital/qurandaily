@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
@@ -20,18 +20,7 @@ import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCampaigns } from "@/hooks/useCampaigns";
 import { useReadingLogs } from "@/hooks/useReadingLogs";
-
-const STREAK_MILESTONES: Record<number, string> = {
-  7: "🎉 One week strong! Consistency is key.",
-  30: "🌟 A full month of consistency! Amazing dedication.",
-  100: "🏆 100 days — truly remarkable. MashaAllah!",
-};
-
-const PROGRESS_MILESTONES: Record<number, string> = {
-  25: "📖 Quarter of the way there!",
-  50: "🌙 Halfway through! Keep going.",
-  75: "✨ The finish line is near!",
-};
+import { dueMilestones, loadShownMilestones, saveShownMilestones } from "@/lib/milestones";
 
 const Index = () => {
   const { user } = useAuth();
@@ -42,7 +31,6 @@ const Index = () => {
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const milestonesShown = useRef(new Set<string>());
 
   const { data: campaigns = [], isLoading: campaignsLoading } = useCampaigns();
   const { data: logs = [], isLoading: logsLoading } = useReadingLogs();
@@ -165,30 +153,15 @@ const Index = () => {
     };
   }, [activeCampaign, logs, campaignEndDate, isCampaignExpired]);
 
-  // Milestone toasts (once per session)
+  // Milestone toasts, each shown once per reading plan on this device
   useEffect(() => {
     if (!activeCampaign || isLoading) return;
-    const shown = milestonesShown.current;
-
-    // Streak milestones
-    if (STREAK_MILESTONES[streak] && !shown.has(`streak-${streak}`)) {
-      shown.add(`streak-${streak}`);
-      toast.success(STREAK_MILESTONES[streak]);
-    }
-
-    // Progress milestones
-    const pct = Math.floor(percentage);
-    for (const threshold of [25, 50, 75]) {
-      if (pct >= threshold && !shown.has(`progress-${threshold}`)) {
-        shown.add(`progress-${threshold}`);
-        toast.success(PROGRESS_MILESTONES[threshold]);
-      }
-    }
-
-    // 100% completion
-    if (pct >= 100 && !shown.has("complete")) {
-      shown.add("complete");
-      toast.success("🎊 You've completed your reading plan! SubhanAllah!", { duration: 8000 });
+    const shown = loadShownMilestones(activeCampaign.id);
+    const { show, markShown } = dueMilestones(streak, percentage, shown);
+    if (markShown.length === 0) return;
+    saveShownMilestones(activeCampaign.id, new Set([...shown, ...markShown]));
+    for (const m of show) {
+      toast.success(m.message, m.key === "complete" ? { duration: 8000 } : undefined);
     }
   }, [streak, percentage, activeCampaign, isLoading]);
 
