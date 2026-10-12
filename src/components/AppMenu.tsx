@@ -38,7 +38,7 @@ const AppMenu = ({ open, onOpenChange }: AppMenuProps) => {
               <User className="h-4 w-4" /> Profile
             </Button>
             <Button variant="ghost" className="justify-start gap-3" onClick={() => go("/campaigns")}>
-              <BookMarked className="h-4 w-4" /> Campaigns
+              <BookMarked className="h-4 w-4" /> Reading plans
             </Button>
             <Button variant="ghost" className="justify-start gap-3" onClick={() => go("/history")}>
               <History className="h-4 w-4" /> History

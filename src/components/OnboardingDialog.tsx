@@ -53,7 +53,7 @@ const OnboardingDialog = ({ open, onOpenChange, onComplete }: OnboardingDialogPr
       if (error) throw error;
     },
     onSuccess: () => {
-      toast({ title: "Welcome aboard!", description: "Your first campaign is ready. Start reading!" });
+      toast({ title: "Welcome aboard!", description: "Your first reading plan is ready. Start reading!" });
       onOpenChange(false);
       onComplete();
     },
@@ -85,7 +85,7 @@ const OnboardingDialog = ({ open, onOpenChange, onComplete }: OnboardingDialogPr
             <BookOpen className="h-6 w-6 text-primary" />
           </div>
           <DialogTitle className="text-center">
-            {step === 1 ? "Welcome to Quran Daily" : "Create Your First Campaign"}
+            {step === 1 ? "Welcome to Quran Daily" : "Create your first reading plan"}
           </DialogTitle>
           <DialogDescription className="text-center">
             {step === 1
@@ -112,7 +112,7 @@ const OnboardingDialog = ({ open, onOpenChange, onComplete }: OnboardingDialogPr
         ) : (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Campaign Name</Label>
+              <Label>Reading plan name</Label>
               <Input
                 placeholder="e.g. Ramadan 2026"
                 value={campaignTitle}

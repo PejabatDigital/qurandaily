@@ -188,7 +188,7 @@ const Index = () => {
     // 100% completion
     if (pct >= 100 && !shown.has("complete")) {
       shown.add("complete");
-      toast.success("🎊 You've completed your campaign! SubhanAllah!", { duration: 8000 });
+      toast.success("🎊 You've completed your reading plan! SubhanAllah!", { duration: 8000 });
     }
   }, [streak, percentage, activeCampaign, isLoading]);
 
@@ -272,9 +272,9 @@ const Index = () => {
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center justify-center py-12 text-center">
               <BookMarked className="h-10 w-10 text-muted-foreground/50 mb-3" />
-              <p className="text-sm font-medium">No campaigns yet</p>
+              <p className="text-sm font-medium">No reading plans yet</p>
               <p className="text-xs text-muted-foreground mb-4">Create your first reading goal to get started.</p>
-              <Button size="sm" onClick={() => setCreateOpen(true)}>Create Campaign</Button>
+              <Button size="sm" onClick={() => setCreateOpen(true)}>Create reading plan</Button>
             </CardContent>
           </Card>
         )}

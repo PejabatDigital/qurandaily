@@ -37,7 +37,7 @@ const Campaigns = () => {
     if (!deleteId) return;
     const { error } = await supabase.from("campaigns").delete().eq("id", deleteId);
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else toast({ title: "Campaign deleted" });
+    else toast({ title: "Reading plan deleted" });
     setDeleteId(null);
     queryClient.invalidateQueries({ queryKey: ["campaigns"] });
   };
@@ -53,7 +53,7 @@ const Campaigns = () => {
           <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <h1 className="text-lg font-bold tracking-tight">Campaigns</h1>
+          <h1 className="text-lg font-bold tracking-tight">Reading plans</h1>
         </div>
       </header>
 
@@ -102,7 +102,7 @@ const Campaigns = () => {
         )}
 
         <Button variant="outline" className="w-full" onClick={openCreate}>
-          <Plus className="mr-2 h-4 w-4" /> New Campaign
+          <Plus className="mr-2 h-4 w-4" /> New reading plan
         </Button>
       </main>
 
@@ -117,8 +117,8 @@ const Campaigns = () => {
         open={!!deleteId}
         onOpenChange={(open) => !open && setDeleteId(null)}
         onConfirm={handleDelete}
-        title="Delete Campaign"
-        description="This will permanently delete this campaign and cannot be undone. Reading logs associated with this campaign will remain."
+        title="Delete reading plan"
+        description="This will permanently delete this reading plan and cannot be undone. Reading logs associated with this reading plan will remain."
       />
     </div>
   );
