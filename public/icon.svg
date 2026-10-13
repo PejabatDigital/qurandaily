@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" fill="#FAF8F5"/>
+  <g fill="none" stroke="#3A785F" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Progress ring, most of the way round -->
+    <path d="M512 192 A320 320 0 1 1 352 234.9" stroke-width="80"/>
+    <!-- Page edges and base of the book -->
+    <path d="M368 424 L346 574 Q452 574 500 620 L524 620 Q572 574 678 574 L656 424" stroke-width="16"/>
+  </g>
+  <g fill="#3A785F" stroke="#3A785F" stroke-width="8" stroke-linejoin="round">
+    <path d="M392 400 Q454 394 502 438 L502 594 Q446 554 370 554 Z"/>
+    <path d="M632 400 Q570 394 522 438 L522 594 Q578 554 654 554 Z"/>
+  </g>
+</svg>
