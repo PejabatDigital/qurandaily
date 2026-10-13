@@ -27,6 +27,7 @@ import { useReadingLogs } from "@/hooks/useReadingLogs";
 import { dueMilestones, loadShownMilestones, saveShownMilestones } from "@/lib/milestones";
 import { bestStreak, daysInclusive, displayPage, isKhatamPlan, pagesBehind, todayTarget } from "@/lib/plan";
 import { dismissCatchUp, isCatchUpDismissed } from "@/lib/catch-up";
+import { planActivity } from "@/lib/activity";
 
 const Index = () => {
   const { user } = useAuth();
@@ -98,10 +99,9 @@ const Index = () => {
     totalPages,
     behind,
     streak,
-    chartData7,
-    chartData30,
+    activity,
   } = useMemo(() => {
-    const chartEndDate = campaignEndDate && isCampaignExpired ? campaignEndDate : new Date();
+    const streakEndDate = campaignEndDate && isCampaignExpired ? campaignEndDate : new Date();
     const campaignLogs = activeCampaign
       ? logs.filter((l) => l.campaign_id === activeCampaign.id && (!campaignEndDate || parseISO(l.created_at) <= campaignEndDate))
       : [];
@@ -128,20 +128,22 @@ const Index = () => {
     let streak = 0;
     if (campaignLogs.length > 0) {
       const logDays = new Set(campaignLogs.map((l) => format(parseISO(l.created_at), "yyyy-MM-dd")));
-      let checkDate = chartEndDate;
+      let checkDate = streakEndDate;
       while (logDays.has(format(checkDate, "yyyy-MM-dd"))) {
         streak++;
         checkDate = subDays(checkDate, 1);
       }
     }
 
-    const buildChartData = (days: number, labelFormat: string) =>
-      Array.from({ length: days }, (_, i) => {
-        const date = subDays(chartEndDate, days - 1 - i);
-        const dayStr = format(date, "yyyy-MM-dd");
-        const dayLogs = campaignLogs.filter((l) => format(parseISO(l.created_at), "yyyy-MM-dd") === dayStr);
-        return { day: format(date, labelFormat), pages: dayLogs.reduce((sum, l) => sum + l.pages_read, 0) };
-      });
+    const activity = activeCampaign
+      ? planActivity({
+          startDate: parseISO(activeCampaign.start_date),
+          endDate: parseISO(activeCampaign.end_date),
+          today: new Date(),
+          finishedOn: pagesRead >= totalPages && campaignLogs[0] ? parseISO(campaignLogs[0].created_at) : null,
+          logs: campaignLogs,
+        })
+      : [];
 
     return {
       campaignLogs,
@@ -155,8 +157,7 @@ const Index = () => {
       totalPages,
       behind,
       streak,
-      chartData7: buildChartData(7, "EEE"),
-      chartData30: buildChartData(30, "d MMM"),
+      activity,
     };
   }, [activeCampaign, logs, campaignEndDate, isCampaignExpired]);
 
@@ -409,7 +410,7 @@ const Index = () => {
               </Card>
             </div>
 
-            <WeeklyChart data7={chartData7} data30={chartData30} />
+            <WeeklyChart activity={activity} />
           </>
         )}
       </main>

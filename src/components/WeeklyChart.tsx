@@ -1,43 +1,45 @@
 import { useState } from "react";
+import { format } from "date-fns";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import type { ActivityDay } from "@/lib/activity";
 
-interface ChartDataPoint {
-  day: string;
-  pages: number;
-}
+type Range = "7" | "30" | "all";
+
+const RANGES: { value: Range; label: string }[] = [
+  { value: "7", label: "7D" },
+  { value: "30", label: "30D" },
+  { value: "all", label: "All" },
+];
 
 interface WeeklyChartProps {
-  data7: ChartDataPoint[];
-  data30: ChartDataPoint[];
+  /** Every day of the reading plan, oldest first. */
+  activity: ActivityDay[];
 }
 
-const WeeklyChart = ({ data7, data30 }: WeeklyChartProps) => {
-  const [range, setRange] = useState<"7" | "30">("7");
-  const data = range === "7" ? data7 : data30;
+const WeeklyChart = ({ activity }: WeeklyChartProps) => {
+  const [range, setRange] = useState<Range>("7");
+  const shown = range === "all" ? activity : activity.slice(-Number(range));
+  const data = shown.map((a) => ({ day: format(a.date, range === "7" ? "EEE" : "d MMM"), pages: a.pages }));
+  const compact = data.length > 7;
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">Reading Activity</CardTitle>
         <div className="flex gap-1">
-          <Button
-            variant={range === "7" ? "default" : "ghost"}
-            size="sm"
-            className="h-7 px-2.5 text-xs"
-            onClick={() => setRange("7")}
-          >
-            7D
-          </Button>
-          <Button
-            variant={range === "30" ? "default" : "ghost"}
-            size="sm"
-            className="h-7 px-2.5 text-xs"
-            onClick={() => setRange("30")}
-          >
-            30D
-          </Button>
+          {RANGES.map((r) => (
+            <Button
+              key={r.value}
+              variant={range === r.value ? "default" : "ghost"}
+              size="sm"
+              className="h-7 px-2.5 text-xs"
+              onClick={() => setRange(r.value)}
+            >
+              {r.label}
+            </Button>
+          ))}
         </div>
       </CardHeader>
       <CardContent>
@@ -47,9 +49,10 @@ const WeeklyChart = ({ data7, data30 }: WeeklyChartProps) => {
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis
                 dataKey="day"
-                tick={{ fontSize: range === "30" ? 10 : 12 }}
+                tick={{ fontSize: compact ? 10 : 12 }}
                 stroke="hsl(var(--muted-foreground))"
-                interval={range === "30" ? 4 : 0}
+                // About six date labels, however many days are shown
+                interval={compact ? Math.ceil(data.length / 6) - 1 : 0}
               />
               <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
               <Tooltip
@@ -65,7 +68,7 @@ const WeeklyChart = ({ data7, data30 }: WeeklyChartProps) => {
                 dataKey="pages"
                 stroke="hsl(var(--primary))"
                 strokeWidth={2}
-                dot={range === "7" ? { r: 4, fill: "hsl(var(--primary))" } : false}
+                dot={compact ? false : { r: 4, fill: "hsl(var(--primary))" }}
                 activeDot={{ r: 6 }}
               />
             </LineChart>
