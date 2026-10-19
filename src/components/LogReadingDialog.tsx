@@ -3,18 +3,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import InputField from "@/components/InputField";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { getSurahForPage } from "@/lib/quran-data";
 import { displayPage, logFromCount, logFromLastPage, pagesLabel } from "@/lib/plan";
-import { Tables } from "@/integrations/supabase/types";
+import type { Campaign } from "@/lib/api-types";
 import { useMutation } from "@tanstack/react-query";
 
 interface LogReadingDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  campaign: Tables<"campaigns"> | null;
+  campaign: Campaign | null;
   lastPageMarker: number;
   /** Called after saving with what was logged. */
   onLogged: (logged: { pagesRead: number; nextMarker: number }) => void;
@@ -23,7 +22,6 @@ interface LogReadingDialogProps {
 }
 
 const LogReadingDialog = ({ open, onOpenChange, campaign, lastPageMarker, onLogged, quiet }: LogReadingDialogProps) => {
-  const { user } = useAuth();
   const { toast } = useToast();
   const [currentPage, setCurrentPage] = useState("");
   const [pagesRead, setPagesRead] = useState("");
@@ -39,14 +37,12 @@ const LogReadingDialog = ({ open, onOpenChange, campaign, lastPageMarker, onLogg
 
   const logReading = useMutation({
     mutationFn: async (vars: { pagesRead: number; currentPageMarker: number; mode: "page" | "count" }) => {
-      if (!campaign || !user) throw new Error("Your session isn't ready yet. Please try again.");
-      const { error } = await supabase.from("reading_logs").insert({
+      if (!campaign) throw new Error("Pick a reading plan first.");
+      await api.createLog({
         campaign_id: campaign.id,
-        user_id: user.id,
         pages_read: vars.pagesRead,
         current_page_marker: vars.currentPageMarker,
       });
-      if (error) throw error;
     },
     onSuccess: (_data, vars) => {
       const lastRead = vars.currentPageMarker - 1;

@@ -4,10 +4,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import InputField from "@/components/InputField";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
-import { Tables } from "@/integrations/supabase/types";
+import type { Campaign } from "@/lib/api-types";
 import { getStartPageForSurah, getEndPageForSurah, getSurahNumberForPage } from "@/lib/quran-data";
 import SurahSelect from "@/components/SurahSelect";
 import { useMutation } from "@tanstack/react-query";
@@ -16,13 +15,12 @@ interface CreateCampaignDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated: () => void;
-  campaign?: Tables<"campaigns"> | null;
+  campaign?: Campaign | null;
   /** Open with the finish date focused (e.g. "Extend finish date"). */
   focusEndDate?: boolean;
 }
 
 const CreateCampaignDialog = ({ open, onOpenChange, onCreated, campaign, focusEndDate }: CreateCampaignDialogProps) => {
-  const { user } = useAuth();
   const { toast } = useToast();
   const [title, setTitle] = useState("");
   const [startSurah, setStartSurah] = useState("1");
@@ -52,16 +50,16 @@ const CreateCampaignDialog = ({ open, onOpenChange, onCreated, campaign, focusEn
 
   const saveCampaign = useMutation({
     mutationFn: async (vars: { title: string; startPage: number; endPage: number; endDate: string }) => {
-      if (!user) throw new Error("Your session isn't ready yet. Please try again.");
       if (campaign) {
-        const { error } = await supabase
-          .from("campaigns")
-          .update({ title: vars.title, start_page: vars.startPage, end_page: vars.endPage, end_date: vars.endDate })
-          .eq("id", campaign.id);
-        if (error) throw error;
+        await api.updateCampaign(campaign.id, {
+          title: vars.title,
+          start_page: vars.startPage,
+          end_page: vars.endPage,
+          end_date: vars.endDate,
+        });
       } else {
-        const { error } = await supabase.from("campaigns").insert({
-          user_id: user.id,
+        // Active, so the server switches the others off.
+        await api.createCampaign({
           title: vars.title,
           start_page: vars.startPage,
           end_page: vars.endPage,
@@ -69,7 +67,6 @@ const CreateCampaignDialog = ({ open, onOpenChange, onCreated, campaign, focusEn
           end_date: vars.endDate,
           is_active: true,
         });
-        if (error) throw error;
       }
     },
     onSuccess: (_data, vars) => {

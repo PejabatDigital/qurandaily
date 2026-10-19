@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2023"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noFallthroughCasesInSwitch": true,
+    "types": ["./worker-configuration.d.ts"]
+  },
+  "include": ["worker", "src/lib/api-types.ts", "src/lib/sign-in-rules.ts", "worker-configuration.d.ts"],
+  // Tests run in Node (vitest), not on Workers.
+  "exclude": ["worker/**/*.test.ts", "worker/test"]
+}

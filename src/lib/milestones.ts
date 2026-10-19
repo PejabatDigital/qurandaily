@@ -1,7 +1,9 @@
 // Milestone toasts (streaks, progress, completion), each shown once per
-// reading plan. What's been shown is remembered in localStorage on this
-// device, with an in-memory copy so a blocked or failing storage still
-// limits each milestone to once per session.
+// reading plan. What's been shown is saved on the plan in the account, so a
+// new device doesn't replay them, with an in-memory copy so each one still
+// shows only once per session while saving (or if saving fails).
+import { api } from "./api";
+import type { Campaign } from "./api-types";
 
 export const STREAK_MILESTONES: Record<number, string> = {
   7: "🎉 One week strong! Consistency is key.",
@@ -19,28 +21,21 @@ export const COMPLETE_MESSAGE = "🎊 You've completed your reading plan! Subhan
 
 export type Milestone = { key: string; message: string };
 
-const storageKey = (campaignId: string) => `qd:milestones:${campaignId}`;
 const memory = new Map<string, Set<string>>();
 
-export function loadShownMilestones(campaignId: string): Set<string> {
-  const shown = new Set(memory.get(campaignId));
-  try {
-    const parsed: unknown = JSON.parse(localStorage.getItem(storageKey(campaignId)) ?? "[]");
-    if (Array.isArray(parsed)) {
-      for (const key of parsed) if (typeof key === "string") shown.add(key);
-    }
-  } catch {
-    // Storage unavailable or corrupted: fall back to the in-memory copy.
-  }
-  return shown;
+/** Milestone keys already shown for the plan: saved on the account, plus this session's. */
+export function shownMilestones(campaign: Pick<Campaign, "id" | "milestones_shown">): Set<string> {
+  return new Set([...campaign.milestones_shown, ...(memory.get(campaign.id) ?? [])]);
 }
 
-export function saveShownMilestones(campaignId: string, shown: Set<string>): void {
-  memory.set(campaignId, new Set(shown));
+/** Remembers milestone keys as shown, for this session straight away and on the account. */
+export async function markMilestonesShown(campaignId: string, keys: string[]): Promise<void> {
+  memory.set(campaignId, new Set([...(memory.get(campaignId) ?? []), ...keys]));
   try {
-    localStorage.setItem(storageKey(campaignId), JSON.stringify([...shown]));
-  } catch {
-    // Storage unavailable: the in-memory copy still covers this session.
+    await api.markMilestonesShown(campaignId, keys);
+  } catch (e) {
+    // The in-memory copy still covers this session.
+    console.warn("Couldn't save shown milestones:", e);
   }
 }
 

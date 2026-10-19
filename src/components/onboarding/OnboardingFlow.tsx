@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { useProfile } from "@/hooks/useProfile";
 import { useToast } from "@/hooks/use-toast";
 import { endOfRamadan } from "@/lib/takwim";
 import { INITIAL_DRAFT, derivePlan, toDateInput, type PlanDraft } from "./draft";
@@ -26,7 +26,6 @@ interface OnboardingFlowProps {
 
 /** Full-screen welcome and set-up flow that creates a reading plan. */
 const OnboardingFlow = ({ startAt = "welcome", onExit, onComplete }: OnboardingFlowProps) => {
-  const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [step, setStep] = useState<StepId>(startAt);
@@ -38,15 +37,8 @@ const OnboardingFlow = ({ startAt = "welcome", onExit, onComplete }: OnboardingF
   const ramadanEnd = useMemo(() => endOfRamadan(today), [today]);
   const plan = useMemo(() => derivePlan(draft, today, ramadanEnd), [draft, today, ramadanEnd]);
 
-  const { data: savedName } = useQuery({
-    queryKey: ["profile_name", user?.id],
-    queryFn: async () => {
-      if (!user) return null;
-      const { data } = await supabase.from("profiles").select("display_name").eq("user_id", user.id).maybeSingle();
-      return data?.display_name || null;
-    },
-    enabled: !!user,
-  });
+  const { data: profile } = useProfile();
+  const savedName = profile?.display_name || null;
 
   // Returning users: start from the name they already gave us.
   useEffect(() => {
@@ -67,37 +59,28 @@ const OnboardingFlow = ({ startAt = "welcome", onExit, onComplete }: OnboardingF
 
   const createPlan = useMutation({
     mutationFn: async () => {
-      if (!user) throw new Error("Your session isn't ready yet. Please try again.");
       if (!plan.finishDate) throw new Error("Pick a finish date first.");
 
       const name = draft.name.trim();
       if (!draft.personalSkipped && name && name !== savedName) {
-        const { error } = await supabase.from("profiles").update({ display_name: name }).eq("user_id", user.id);
-        if (error) throw error;
+        await api.updateProfile({ display_name: name });
       }
 
-      const { error: deactivateError } = await supabase
-        .from("campaigns")
-        .update({ is_active: false })
-        .eq("user_id", user.id);
-      if (deactivateError) throw deactivateError;
-
-      const { error } = await supabase.from("campaigns").insert({
-        user_id: user.id,
+      // Active, so the server switches any other plan off.
+      await api.createCampaign({
         title: plan.title,
         start_page: plan.startPage,
         end_page: plan.goalEnd,
-        // Local date: the column's default is the database's (UTC) date.
+        // The reader's local date, not the server's (UTC) one.
         start_date: toDateInput(today),
         end_date: toDateInput(plan.finishDate),
         is_active: true,
       });
-      if (error) throw error;
     },
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["campaigns"] }),
-        queryClient.invalidateQueries({ queryKey: ["profile_name"] }),
+        queryClient.invalidateQueries({ queryKey: ["profile"] }),
       ]);
       onComplete();
     },

@@ -1,27 +1,22 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import type { Tables } from "@/integrations/supabase/types";
+import type { Campaign } from "@/lib/api-types";
 
 const inserts = vi.hoisted(() => [] as unknown[]);
 
-vi.mock("@/contexts/AuthContext", () => ({
-  useAuth: () => ({ user: { id: "user-1" }, session: {}, loading: false, error: null }),
-}));
-vi.mock("@/integrations/supabase/client", () => ({
-  supabase: {
-    from: () => ({
-      insert: async (values: unknown) => {
-        inserts.push(values);
-        return { error: null };
-      },
-    }),
+vi.mock("@/lib/api", () => ({
+  api: {
+    createLog: async (values: unknown) => {
+      inserts.push(values);
+      return values;
+    },
   },
 }));
 
 import LogReadingDialog from "@/components/LogReadingDialog";
 
-const plan = { id: "plan-1", start_page: 1, end_page: 604 } as Tables<"campaigns">;
+const plan = { id: "plan-1", start_page: 1, end_page: 604 } as Campaign;
 
 function renderDialog(lastPageMarker: number, campaign = plan) {
   const onLogged = vi.fn();

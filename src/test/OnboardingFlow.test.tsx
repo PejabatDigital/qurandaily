@@ -5,24 +5,20 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 const calls = vi.hoisted(() => ({ updates: [] as unknown[], inserts: [] as unknown[] }));
 
 vi.mock("@/contexts/AuthContext", () => ({
-  useAuth: () => ({ user: { id: "user-1" }, session: {}, loading: false, error: null }),
+  useAuth: () => ({ user: { id: "user-1", email: "reader@example.com" }, loading: false, error: null }),
 }));
 
-vi.mock("@/integrations/supabase/client", () => ({
-  supabase: {
-    from: (table: string) => ({
-      select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { display_name: null } }) }) }),
-      update: (values: unknown) => ({
-        eq: async () => {
-          calls.updates.push({ table, values });
-          return { error: null };
-        },
-      }),
-      insert: async (values: unknown) => {
-        calls.inserts.push({ table, values });
-        return { error: null };
-      },
-    }),
+vi.mock("@/lib/api", () => ({
+  api: {
+    profile: async () => ({ email: "reader@example.com", display_name: null, prayer_zone: null }),
+    updateProfile: async (values: unknown) => {
+      calls.updates.push(values);
+      return values;
+    },
+    createCampaign: async (values: unknown) => {
+      calls.inserts.push(values);
+      return values;
+    },
   },
 }));
 
@@ -82,22 +78,18 @@ describe("OnboardingFlow", () => {
     click("Start reading");
 
     await waitFor(() => expect(onComplete).toHaveBeenCalled());
+    // Active, so the server switches any other plan off. No name was saved.
     expect(calls.inserts).toEqual([
       {
-        table: "campaigns",
-        values: {
-          user_id: "user-1",
-          title: "Full Quran (khatam)",
-          start_page: 1,
-          end_page: 604,
-          start_date: "2026-10-12",
-          end_date: "2026-11-10",
-          is_active: true,
-        },
+        title: "Full Quran (khatam)",
+        start_page: 1,
+        end_page: 604,
+        start_date: "2026-10-12",
+        end_date: "2026-11-10",
+        is_active: true,
       },
     ]);
-    // Only the other plans are deactivated; no name was saved.
-    expect(calls.updates).toEqual([{ table: "campaigns", values: { is_active: false } }]);
+    expect(calls.updates).toEqual([]);
   });
 
   it("starts from the reader's page, saves their name and keeps choices when going back", async () => {
@@ -131,10 +123,8 @@ describe("OnboardingFlow", () => {
     click("Start reading");
 
     await waitFor(() => expect(onComplete).toHaveBeenCalled());
-    expect(calls.updates[0]).toEqual({ table: "profiles", values: { display_name: "Aisyah" } });
-    expect(calls.inserts[0]).toMatchObject({
-      values: { title: "Juz Amma (Juz 30)", start_page: 590, end_page: 604, end_date: "2027-03-09" },
-    });
+    expect(calls.updates[0]).toEqual({ display_name: "Aisyah" });
+    expect(calls.inserts[0]).toMatchObject({ title: "Juz Amma (Juz 30)", start_page: 590, end_page: 604, end_date: "2027-03-09" });
   });
 
   it("leaves the flow from the first step when started at the goal", () => {

@@ -1,76 +1,90 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { User, Session } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
+import { createContext, useCallback, useContext, useEffect, useState, ReactNode } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { api, auth, setSignedOutHandler, type SessionUser } from "@/lib/api";
 
 interface AuthContextType {
-  user: User | null;
-  session: Session | null;
+  user: SessionUser | null;
+  /** True until we know whether there's a session. */
   loading: boolean;
+  /** Set when the session check couldn't reach the server. */
   error: string | null;
+  retry: () => void;
+  /** After the sign-in screen has signed someone in. */
+  signedIn: (user: SessionUser) => void;
+  signOut: () => Promise<void>;
+  /** Permanently deletes the account and everything in it. */
+  deleteAccount: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
-  session: null,
   loading: true,
   error: null,
+  retry: () => {},
+  signedIn: () => {},
+  signOut: async () => {},
+  deleteAccount: async () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
 
+/** Removes what this device remembers for the app (e.g. catch-up dismissals). */
+function forgetDevice() {
+  try {
+    for (const key of Object.keys(localStorage)) if (key.startsWith("qd:")) localStorage.removeItem(key);
+  } catch {
+    // Storage unavailable: nothing to clear.
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const queryClient = useQueryClient();
+  const [user, setUser] = useState<SessionUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    // Keeps session/user in sync for every future auth event (token refresh,
-    // the SIGNED_IN event that signInAnonymously() itself triggers below,
-    // etc). It must NOT touch `loading` — onAuthStateChange fires an initial
-    // event with session:null almost immediately, well before the bootstrap
-    // below finishes, and clearing `loading` on that event let ProtectedRoute
-    // render children with no user yet. `user` would then flip from null to
-    // the real anonymous user while already mounted, and downstream query
-    // state (enabled: !!user) would flip with it — a false->true->false
-    // isLoading flicker in Index.tsx that hit its full-skeleton early return
-    // and unmounted everything below it, wiping in-progress onboarding input.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-      }
-    );
+  // Signed out: drop everything cached for the previous user.
+  const clear = useCallback(() => {
+    setUser(null);
+    queryClient.clear();
+  }, [queryClient]);
 
-    // `loading` is only ever cleared here, once, after we know for certain
-    // whether there's an existing session or the anonymous sign-in attempt
-    // has finished (success or failure).
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session) {
-        setSession(session);
-        setUser(session.user);
-        setLoading(false);
-        return;
-      }
-      // No session yet on this device — open a silent anonymous one so the
-      // app never shows a sign-in screen.
-      const { data, error: signInError } = await supabase.auth.signInAnonymously();
-      if (signInError) {
-        console.error("Anonymous sign-in failed:", signInError);
-        setError(signInError.message);
-      } else {
-        setSession(data.session);
-        setUser(data.user);
-      }
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+  // The session is a cookie that lasts 60 days and renews when the app is opened,
+  // so this normally finds the user straight away.
+  const check = useCallback(() => {
+    setLoading(true);
+    setError(null);
+    auth
+      .session()
+      .then(setUser)
+      .catch((e: Error) => setError(e.message))
+      .finally(() => setLoading(false));
   }, []);
 
-  return (
-    <AuthContext.Provider value={{ user, session, loading, error }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  useEffect(() => {
+    check();
+    setSignedOutHandler(clear);
+  }, [check, clear]);
+
+  const value: AuthContextType = {
+    user,
+    loading,
+    error,
+    retry: check,
+    signedIn: (u) => {
+      queryClient.clear();
+      setUser(u);
+    },
+    signOut: async () => {
+      await auth.signOut();
+      clear();
+    },
+    deleteAccount: async () => {
+      await api.deleteAccount();
+      forgetDevice();
+      clear();
+    },
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

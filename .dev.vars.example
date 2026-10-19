@@ -1,0 +1,7 @@
+# Copy to .dev.vars (git-ignored) for local development.
+BETTER_AUTH_URL=http://localhost:8080
+# Any long random string, e.g. from: openssl rand -base64 32
+BETTER_AUTH_SECRET=
+# Print sign-in codes in the terminal instead of emailing them.
+EMAIL_TO_CONSOLE=true
+RESEND_API_KEY=

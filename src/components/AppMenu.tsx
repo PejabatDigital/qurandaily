@@ -8,7 +8,7 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { User, BookMarked, History, Info, CalendarDays } from "lucide-react";
+import { User, BookMarked, History, Info, CalendarDays, Shield } from "lucide-react";
 import AboutDialog from "@/components/AboutDialog";
 
 interface AppMenuProps {
@@ -55,6 +55,9 @@ const AppMenu = ({ open, onOpenChange }: AppMenuProps) => {
               }}
             >
               <Info className="h-4 w-4" /> About
+            </Button>
+            <Button variant="ghost" className="justify-start gap-3" onClick={() => go("/privacy")}>
+              <Shield className="h-4 w-4" /> Privacy
             </Button>
           </nav>
         </SheetContent>

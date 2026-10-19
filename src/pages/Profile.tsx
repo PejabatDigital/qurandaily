@@ -1,63 +1,55 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import DeleteAccountDialog from "@/components/DeleteAccountDialog";
 import { ArrowLeft, User } from "lucide-react";
 
-const TIMEZONES = [
-  "UTC",
-  "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles",
-  "America/Anchorage", "America/Toronto", "America/Vancouver", "America/Mexico_City",
-  "America/Bogota", "America/Sao_Paulo", "America/Argentina/Buenos_Aires",
-  "Europe/London", "Europe/Paris", "Europe/Berlin", "Europe/Madrid", "Europe/Rome",
-  "Europe/Amsterdam", "Europe/Brussels", "Europe/Zurich", "Europe/Stockholm",
-  "Europe/Moscow", "Europe/Istanbul",
-  "Africa/Cairo", "Africa/Lagos", "Africa/Johannesburg", "Africa/Nairobi", "Africa/Casablanca",
-  "Asia/Dubai", "Asia/Riyadh", "Asia/Tehran", "Asia/Karachi", "Asia/Kolkata",
-  "Asia/Dhaka", "Asia/Bangkok", "Asia/Jakarta", "Asia/Singapore", "Asia/Kuala_Lumpur",
-  "Asia/Shanghai", "Asia/Hong_Kong", "Asia/Tokyo", "Asia/Seoul", "Asia/Manila",
-  "Australia/Sydney", "Australia/Melbourne", "Australia/Perth",
-  "Pacific/Auckland", "Pacific/Fiji", "Pacific/Honolulu",
-];
-
 const Profile = () => {
-  const { user } = useAuth();
+  const { user, signOut, deleteAccount } = useAuth();
+  const { data: profile } = useProfile();
+  const updateProfile = useUpdateProfile();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [displayName, setDisplayName] = useState("");
-  const [timezone, setTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone);
-  const [loading, setLoading] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
-    supabase
-      .from("profiles")
-      .select("display_name, timezone")
-      .eq("user_id", user.id)
-      .single()
-      .then(({ data }) => {
-        if (data?.display_name) setDisplayName(data.display_name);
-        if (data?.timezone) setTimezone(data.timezone);
-      });
-  }, [user]);
+    if (profile?.display_name) setDisplayName(profile.display_name);
+  }, [profile?.display_name]);
 
-  const handleSave = async (e: React.FormEvent) => {
+  const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
-    setLoading(true);
-    const { error } = await supabase
-      .from("profiles")
-      .update({ display_name: displayName, timezone })
-      .eq("user_id", user.id);
-    setLoading(false);
-    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else toast({ title: "Profile updated successfully!" });
+    updateProfile.mutate(
+      { display_name: displayName },
+      {
+        onSuccess: () => toast({ title: "Profile updated successfully!" }),
+        onError: (error) => toast({ title: "Error", description: error.message, variant: "destructive" }),
+      },
+    );
+  };
+
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    try {
+      await signOut();
+      navigate("/");
+    } catch (error) {
+      toast({ title: "Couldn't sign out", description: (error as Error).message, variant: "destructive" });
+      setSigningOut(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    await deleteAccount();
+    navigate("/");
+    toast({ title: "Your account has been deleted." });
   };
 
   return (
@@ -82,35 +74,46 @@ const Profile = () => {
           <CardContent className="p-4">
             <form onSubmit={handleSave} className="space-y-4">
               <div className="space-y-2">
-                <Label>Display Name</Label>
+                <Label htmlFor="display-name">Display Name</Label>
                 <Input
+                  id="display-name"
                   placeholder="Your name"
+                  maxLength={50}
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                 />
               </div>
-              <div className="space-y-2">
-                <Label>Timezone</Label>
-                <Select value={timezone} onValueChange={setTimezone}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select timezone" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TIMEZONES.map((tz) => (
-                      <SelectItem key={tz} value={tz}>
-                        {tz.replace(/_/g, " ")}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Saving..." : "Save"}
+              <Button type="submit" className="w-full" disabled={updateProfile.isPending}>
+                {updateProfile.isPending ? "Saving..." : "Save"}
               </Button>
             </form>
           </CardContent>
         </Card>
+
+        <section className="space-y-2">
+          <h2 className="px-1 text-sm font-semibold text-foreground">Account</h2>
+          <Card>
+            <CardContent className="space-y-4 p-4">
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground">Signed in as</p>
+                <p className="break-all text-sm font-medium">{profile?.email ?? user?.email}</p>
+              </div>
+              <Button variant="outline" className="w-full" onClick={handleSignOut} disabled={signingOut}>
+                {signingOut ? "Signing out..." : "Sign out"}
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full text-destructive hover:bg-destructive/10 hover:text-destructive"
+                onClick={() => setDeleteOpen(true)}
+              >
+                Delete my account
+              </Button>
+            </CardContent>
+          </Card>
+        </section>
       </main>
+
+      <DeleteAccountDialog open={deleteOpen} onOpenChange={setDeleteOpen} onConfirm={handleDelete} />
     </div>
   );
 };

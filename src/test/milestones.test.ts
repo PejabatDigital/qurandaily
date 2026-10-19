@@ -1,11 +1,24 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+
+const saved = vi.hoisted(() => ({ calls: [] as { id: string; keys: string[] }[], fail: false }));
+vi.mock("@/lib/api", () => ({
+  api: {
+    markMilestonesShown: async (id: string, keys: string[]) => {
+      if (saved.fail) throw new Error("offline");
+      saved.calls.push({ id, keys });
+      return { ok: true };
+    },
+  },
+}));
+
 import {
   COMPLETE_MESSAGE, PROGRESS_MILESTONES, STREAK_MILESTONES,
-  dueMilestones, loadShownMilestones, saveShownMilestones,
+  dueMilestones, markMilestonesShown, shownMilestones,
 } from "@/lib/milestones";
 
 beforeEach(() => {
-  localStorage.clear();
+  saved.calls = [];
+  saved.fail = false;
 });
 
 describe("dueMilestones", () => {
@@ -35,27 +48,22 @@ describe("dueMilestones", () => {
   });
 });
 
-describe("shown milestone storage", () => {
-  it("persists per reading plan", () => {
-    saveShownMilestones("plan-a", new Set(["progress-25"]));
-    expect([...loadShownMilestones("plan-a")]).toEqual(["progress-25"]);
-    expect(loadShownMilestones("plan-b").size).toBe(0);
-    expect(JSON.parse(localStorage.getItem("qd:milestones:plan-a")!)).toEqual(["progress-25"]);
+describe("shown milestones", () => {
+  it("come from the plan on the account", () => {
+    expect([...shownMilestones({ id: "plan-a", milestones_shown: ["progress-25"] })]).toEqual(["progress-25"]);
   });
 
-  it("ignores corrupted storage", () => {
-    localStorage.setItem("qd:milestones:plan-c", "{not json");
-    expect(loadShownMilestones("plan-c").size).toBe(0);
+  it("are saved to the account and remembered for the session straight away", async () => {
+    const done = markMilestonesShown("plan-b", ["streak-7"]);
+    expect(shownMilestones({ id: "plan-b", milestones_shown: [] }).has("streak-7")).toBe(true);
+    await done;
+    expect(saved.calls).toEqual([{ id: "plan-b", keys: ["streak-7"] }]);
   });
 
-  it("still remembers for the session when storage throws", () => {
-    const original = Storage.prototype.setItem;
-    Storage.prototype.setItem = () => { throw new Error("blocked"); };
-    try {
-      saveShownMilestones("plan-d", new Set(["streak-7"]));
-    } finally {
-      Storage.prototype.setItem = original;
-    }
-    expect(loadShownMilestones("plan-d").has("streak-7")).toBe(true);
+  it("are still remembered for the session when saving fails", async () => {
+    saved.fail = true;
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    await markMilestonesShown("plan-c", ["complete"]);
+    expect(shownMilestones({ id: "plan-c", milestones_shown: [] }).has("complete")).toBe(true);
   });
 });

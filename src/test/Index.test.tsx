@@ -1,22 +1,27 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup, within, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import type { Tables } from "@/integrations/supabase/types";
+import type { Campaign, ReadingLog } from "@/lib/api-types";
 
 const data = vi.hoisted(() => ({
-  campaigns: [] as Tables<"campaigns">[],
-  logs: [] as Tables<"reading_logs">[],
+  campaigns: [] as Campaign[],
+  logs: [] as ReadingLog[],
+  milestonesSaved: [] as { id: string; keys: string[] }[],
 }));
 
 vi.mock("@/contexts/AuthContext", () => ({
-  useAuth: () => ({ user: { id: "user-1" }, session: {}, loading: false, error: null }),
+  useAuth: () => ({ user: { id: "user-1", email: "reader@example.com" }, loading: false, error: null }),
 }));
-vi.mock("@/integrations/supabase/client", () => ({
-  supabase: {
-    from: () => ({
-      select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null }) }) }),
-      insert: async () => ({ error: null }),
-    }),
+vi.mock("@/lib/api", () => ({
+  api: {
+    profile: async () => ({ email: "reader@example.com", display_name: null, prayer_zone: null }),
+    createCampaign: async () => ({}),
+    updateCampaign: async () => ({}),
+    createLog: async (values: unknown) => values,
+    markMilestonesShown: async (id: string, keys: string[]) => {
+      data.milestonesSaved.push({ id, keys });
+      return { ok: true };
+    },
   },
 }));
 vi.mock("@/hooks/useCampaigns", () => ({ useCampaigns: () => ({ data: data.campaigns, isLoading: false }) }));
@@ -27,7 +32,7 @@ vi.mock("@/components/AppMenu", () => ({ default: () => null }));
 
 import Index from "@/pages/Index";
 
-const plan = (patch: Partial<Tables<"campaigns">> = {}): Tables<"campaigns"> => ({
+const plan = (patch: Partial<Campaign> = {}): Campaign => ({
   id: "plan-1",
   user_id: "user-1",
   title: "Full Quran (khatam)",
@@ -36,12 +41,13 @@ const plan = (patch: Partial<Tables<"campaigns">> = {}): Tables<"campaigns"> => 
   start_date: "2026-10-01",
   end_date: "2026-10-30",
   is_active: true,
+  milestones_shown: [],
   created_at: "2026-10-01T01:00:00Z",
   updated_at: "2026-10-01T01:00:00Z",
   ...patch,
 });
 
-const log = (pages: number, marker: number, createdAt: string): Tables<"reading_logs"> => ({
+const log = (pages: number, marker: number, createdAt: string): ReadingLog => ({
   id: `log-${createdAt}`,
   user_id: "user-1",
   campaign_id: "plan-1",
@@ -68,6 +74,7 @@ beforeEach(() => {
   localStorage.clear();
   data.campaigns = [];
   data.logs = [];
+  data.milestonesSaved = [];
 });
 
 afterEach(() => {
@@ -200,6 +207,21 @@ describe("Home", () => {
     cleanup();
     renderHome();
     expect(screen.queryByText("Khatam complete")).not.toBeInTheDocument();
+  });
+
+  it("saves shown milestones to the account", () => {
+    data.campaigns = [plan({ id: "plan-3" })];
+    data.logs = [{ ...log(160, 161, "2026-10-12T01:00:00Z"), campaign_id: "plan-3" }];
+    renderHome();
+    expect(data.milestonesSaved).toEqual([{ id: "plan-3", keys: ["progress-25"] }]);
+  });
+
+  it("doesn't replay a celebration already shown on another device", () => {
+    data.campaigns = [plan({ id: "plan-4", milestones_shown: ["progress-25", "progress-50", "progress-75", "complete"] })];
+    data.logs = [{ ...log(604, 605, "2026-10-12T01:00:00Z"), campaign_id: "plan-4" }];
+    renderHome();
+    expect(screen.queryByText("Khatam complete")).not.toBeInTheDocument();
+    expect(data.milestonesSaved).toEqual([]);
   });
 
   it("says \u201creading plan complete\u201d for part of the Quran, and starts the next plan at the goal step", () => {

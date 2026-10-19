@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { Tables } from "@/integrations/supabase/types";
+import { api } from "@/lib/api";
+import type { Campaign } from "@/lib/api-types";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,13 +17,13 @@ const Campaigns = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [editCampaign, setEditCampaign] = useState<Tables<"campaigns"> | null>(null);
+  const [editCampaign, setEditCampaign] = useState<Campaign | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const { data: campaigns = [], isLoading } = useCampaigns();
 
-  const openEdit = (c: Tables<"campaigns">) => {
+  const openEdit = (c: Campaign) => {
     setEditCampaign(c);
     setDialogOpen(true);
   };
@@ -35,11 +35,15 @@ const Campaigns = () => {
 
   const handleDelete = async () => {
     if (!deleteId) return;
-    const { error } = await supabase.from("campaigns").delete().eq("id", deleteId);
-    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else toast({ title: "Reading plan deleted" });
+    try {
+      await api.deleteCampaign(deleteId);
+      toast({ title: "Reading plan deleted" });
+    } catch (error) {
+      toast({ title: "Error", description: (error as Error).message, variant: "destructive" });
+    }
     setDeleteId(null);
     queryClient.invalidateQueries({ queryKey: ["campaigns"] });
+    queryClient.invalidateQueries({ queryKey: ["reading_logs"] });
   };
 
   const handleDialogCreated = () => {

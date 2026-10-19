@@ -1,8 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
 import { fetchSolatMonth, DEFAULT_ZONE, SolatUnavailableError } from "@/lib/solat";
-
-const STORAGE_KEY = "takwim:zone";
+import { toast } from "@/hooks/use-toast";
+import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
 
 export function useSolatMonth(zone: string, year: number, month: number) {
   return useQuery({
@@ -14,26 +13,14 @@ export function useSolatMonth(zone: string, year: number, month: number) {
   });
 }
 
+/** The prayer zone saved on the account (the default until one is chosen). */
 export function useSelectedZone(): [string, (z: string) => void] {
-  const [zone, setZoneState] = useState<string>(DEFAULT_ZONE);
-
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) setZoneState(stored);
-    } catch {
-      // ignore
-    }
-  }, []);
-
-  const setZone = (z: string) => {
-    setZoneState(z);
-    try {
-      localStorage.setItem(STORAGE_KEY, z);
-    } catch {
-      // ignore
-    }
-  };
-
-  return [zone, setZone];
+  const { data: profile } = useProfile();
+  const updateProfile = useUpdateProfile();
+  const setZone = (z: string) =>
+    updateProfile.mutate(
+      { prayer_zone: z },
+      { onError: (error) => toast({ title: "Couldn't save your prayer zone", description: error.message, variant: "destructive" }) },
+    );
+  return [profile?.prayer_zone ?? DEFAULT_ZONE, setZone];
 }

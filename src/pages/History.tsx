@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { Tables } from "@/integrations/supabase/types";
+import { api } from "@/lib/api";
+import type { ReadingLog } from "@/lib/api-types";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +22,7 @@ const History = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
-  const [editLog, setEditLog] = useState<Tables<"reading_logs"> | null>(null);
+  const [editLog, setEditLog] = useState<ReadingLog | null>(null);
   const [pagesRead, setPagesRead] = useState("");
   const [pageMarker, setPageMarker] = useState("");
   const [logDate, setLogDate] = useState("");
@@ -34,7 +34,7 @@ const History = () => {
 
   const campaignMap = Object.fromEntries(campaigns.map((c) => [c.id, c.title]));
 
-  const openEdit = (log: Tables<"reading_logs">) => {
+  const openEdit = (log: ReadingLog) => {
     setEditLog(log);
     setPagesRead(String(log.pages_read));
     setPageMarker(String(log.current_page_marker));
@@ -46,25 +46,29 @@ const History = () => {
     e.preventDefault();
     if (!editLog) return;
     setLoading(true);
-    const { error } = await supabase
-      .from("reading_logs")
-      .update({
+    try {
+      await api.updateLog(editLog.id, {
         pages_read: parseInt(pagesRead),
         current_page_marker: parseInt(pageMarker),
         created_at: new Date(logDate).toISOString(),
-      })
-      .eq("id", editLog.id);
+      });
+      toast({ title: "Log updated!" });
+      setEditOpen(false);
+    } catch (error) {
+      toast({ title: "Error", description: (error as Error).message, variant: "destructive" });
+    }
     setLoading(false);
-    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else { toast({ title: "Log updated!" }); setEditOpen(false); }
     queryClient.invalidateQueries({ queryKey: ["reading_logs"] });
   };
 
   const handleDelete = async () => {
     if (!deleteId) return;
-    const { error } = await supabase.from("reading_logs").delete().eq("id", deleteId);
-    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else toast({ title: "Log deleted" });
+    try {
+      await api.deleteLog(deleteId);
+      toast({ title: "Log deleted" });
+    } catch (error) {
+      toast({ title: "Error", description: (error as Error).message, variant: "destructive" });
+    }
     setDeleteId(null);
     queryClient.invalidateQueries({ queryKey: ["reading_logs"] });
   };

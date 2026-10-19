@@ -12,6 +12,8 @@ const Profile = lazy(() => import("./pages/Profile"));
 const Campaigns = lazy(() => import("./pages/Campaigns"));
 const History = lazy(() => import("./pages/History"));
 const Calendar = lazy(() => import("./pages/Calendar"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const SignIn = lazy(() => import("./pages/SignIn"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -22,23 +24,21 @@ const PageFallback = () => (
   </div>
 );
 
-const AuthErrorFallback = ({ message }: { message: string | null }) => (
+const AuthErrorFallback = ({ message, onRetry }: { message: string; onRetry: () => void }) => (
   <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-6 text-center">
-    <p className="text-sm font-medium">Couldn't sign you in</p>
-    <p className="text-xs text-muted-foreground">{message || "Something went wrong starting your session."}</p>
-    <Button onClick={() => window.location.reload()}>Try again</Button>
+    <p className="text-sm font-medium">Couldn't reach Quran Daily</p>
+    <p className="text-xs text-muted-foreground">{message}</p>
+    <Button onClick={onRetry}>Try again</Button>
   </div>
 );
 
-// Waits for the silent anonymous session (see AuthContext) before rendering
-// anything that talks to Supabase. There is no sign-in screen to fall back to,
-// so if the session never materializes (sign-ins disabled, rate-limited,
-// network error) this shows a retry screen instead of silently rendering
-// pages with no user.
+// Everything needs a signed-in user (see AuthContext): until there is one, any
+// page shows the sign-in screen, and the page opens once signed in.
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { loading, user, error } = useAuth();
+  const { loading, user, error, retry } = useAuth();
   if (loading) return <PageFallback />;
-  if (!user) return <AuthErrorFallback message={error} />;
+  if (error) return <AuthErrorFallback message={error} onRetry={retry} />;
+  if (!user) return <SignIn />;
   return <>{children}</>;
 };
 
@@ -56,7 +56,9 @@ const App = () => (
               <Route path="/campaigns" element={<ProtectedRoute><Campaigns /></ProtectedRoute>} />
               <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
               <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
-              <Route path="*" element={<NotFound />} />
+              {/* Open to everyone: it's linked from the sign-in screen. */}
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="*" element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
             </Routes>
           </Suspense>
         </BrowserRouter>

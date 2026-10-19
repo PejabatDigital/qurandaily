@@ -1,13 +1,18 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import CalendarPage from "@/pages/Calendar";
 import { TAKWIM_YEARS } from "@/lib/takwim";
 
 function renderAt(date: Date) {
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(date);
-  return render(<MemoryRouter><CalendarPage /></MemoryRouter>);
+  return render(
+    <QueryClientProvider client={new QueryClient()}>
+      <MemoryRouter><CalendarPage /></MemoryRouter>
+    </QueryClientProvider>,
+  );
 }
 
 afterEach(() => {

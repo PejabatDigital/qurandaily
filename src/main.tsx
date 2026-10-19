@@ -39,9 +39,9 @@ if (!rootElement) {
 
 const root = createRoot(rootElement);
 
-// App (and its transitive imports, e.g. the Supabase client) is loaded dynamically
-// so a module-load-time crash — like a missing env var — can be caught here and
-// shown on screen, instead of silently failing before React ever renders anything.
+// App (and everything it imports) is loaded dynamically so a crash while loading
+// can be caught here and shown on screen, instead of silently failing before React
+// ever renders anything.
 import("./App.tsx")
   .then(({ default: App }) => {
     root.render(

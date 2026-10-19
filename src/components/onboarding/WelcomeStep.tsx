@@ -15,7 +15,6 @@ const WelcomeStep = ({ onNext }: { onNext: () => void }) => (
         <Button size="lg" className="w-full" onClick={onNext}>
           Get started
         </Button>
-        <p className="text-xs text-muted-foreground">Free. No sign-up needed.</p>
         <p className="text-xs font-medium text-muted-foreground opacity-70">{"{ kasah kod }"}</p>
       </>
     }

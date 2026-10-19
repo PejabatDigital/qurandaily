@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 import CircularProgress from "@/components/CircularProgress";
 import WeeklyChart from "@/components/WeeklyChart";
 import LogReadingDialog from "@/components/LogReadingDialog";
@@ -24,13 +23,12 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCampaigns } from "@/hooks/useCampaigns";
 import { useReadingLogs } from "@/hooks/useReadingLogs";
-import { dueMilestones, loadShownMilestones, saveShownMilestones } from "@/lib/milestones";
+import { dueMilestones, markMilestonesShown, shownMilestones } from "@/lib/milestones";
 import { bestStreak, daysInclusive, displayPage, isKhatamPlan, pagesBehind, todayTarget } from "@/lib/plan";
 import { dismissCatchUp, isCatchUpDismissed } from "@/lib/catch-up";
 import { planActivity } from "@/lib/activity";
 
 const Index = () => {
-  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [logOpen, setLogOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -66,21 +64,24 @@ const Index = () => {
     setIsRefreshing(true);
     await queryClient.invalidateQueries({ queryKey: ["campaigns"] });
     await queryClient.invalidateQueries({ queryKey: ["reading_logs"] });
-    await queryClient.invalidateQueries({ queryKey: ["profile_name"] });
+    await queryClient.invalidateQueries({ queryKey: ["profile"] });
     setIsRefreshing(false);
   };
 
   const handleDataChange = () => {
     queryClient.invalidateQueries({ queryKey: ["campaigns"] });
     queryClient.invalidateQueries({ queryKey: ["reading_logs"] });
-    queryClient.invalidateQueries({ queryKey: ["profile_name"] });
+    queryClient.invalidateQueries({ queryKey: ["profile"] });
   };
 
+  // Making a plan active switches the others off (on the server).
   const switchCampaign = async (campaignId: string) => {
-    if (!user) return;
     setSelectedCampaignId(campaignId);
-    await supabase.from("campaigns").update({ is_active: false }).eq("user_id", user.id);
-    await supabase.from("campaigns").update({ is_active: true }).eq("id", campaignId);
+    try {
+      await api.updateCampaign(campaignId, { is_active: true });
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
     queryClient.invalidateQueries({ queryKey: ["campaigns"] });
   };
 
@@ -161,14 +162,13 @@ const Index = () => {
     };
   }, [activeCampaign, logs, campaignEndDate, isCampaignExpired]);
 
-  // Milestones, each shown once per reading plan on this device. Reaching
-  // 100% gets the full-screen celebration instead of a toast.
+  // Milestones, each shown once per reading plan (remembered on the account).
+  // Reaching 100% gets the full-screen celebration instead of a toast.
   useEffect(() => {
     if (!activeCampaign || isLoading) return;
-    const shown = loadShownMilestones(activeCampaign.id);
-    const { show, markShown } = dueMilestones(streak, percentage, shown);
+    const { show, markShown } = dueMilestones(streak, percentage, shownMilestones(activeCampaign));
     if (markShown.length === 0) return;
-    saveShownMilestones(activeCampaign.id, new Set([...shown, ...markShown]));
+    markMilestonesShown(activeCampaign.id, markShown);
     for (const m of show) {
       if (m.key === "complete") {
         const finishedOn = campaignLogs[0] ? parseISO(campaignLogs[0].created_at) : new Date();
@@ -240,7 +240,7 @@ const Index = () => {
     );
   }
 
-  // No reading plan on this device (new, or every plan deleted): set one up.
+  // No reading plan yet (new account, or every plan deleted): set one up.
   if (campaigns.length === 0) {
     return <OnboardingFlow onComplete={() => setSelectedCampaignId(null)} />;
   }

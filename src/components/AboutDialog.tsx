@@ -5,6 +5,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { Link } from "react-router-dom";
 import { BookOpen, Heart } from "lucide-react";
 
 export const APP_VERSION = "1.0.0";
@@ -37,6 +38,16 @@ const AboutDialog = ({ open, onOpenChange }: AboutDialogProps) => {
             <p className="text-xs text-muted-foreground">Version</p>
             <p className="font-medium">{APP_VERSION}</p>
           </div>
+
+          <p className="text-xs text-muted-foreground">
+            <Link to="/privacy" onClick={() => onOpenChange(false)} className="underline underline-offset-2">
+              Privacy
+            </Link>
+            <span className="px-2 opacity-70">·</span>
+            <a href="mailto:hello@kasahkod.cc" className="underline underline-offset-2">
+              hello@kasahkod.cc
+            </a>
+          </p>
 
           <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground pt-2">
             Made with <Heart className="h-3 w-3 fill-destructive text-destructive" /> for the Ummah

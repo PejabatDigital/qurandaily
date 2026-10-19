@@ -6,6 +6,8 @@ import path from "path";
 export default defineConfig({
   server: {
     port: 8080,
+    // npm run dev:api runs the Worker and its local database on 8787
+    proxy: { "/api": "http://localhost:8787" },
   },
   plugins: [react()],
   resolve: {

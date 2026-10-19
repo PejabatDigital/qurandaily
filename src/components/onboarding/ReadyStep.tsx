@@ -52,7 +52,7 @@ const ReadyStep = ({ plan, onStart, starting }: ReadyStepProps) => {
         </dl>
       </Card>
 
-      <InfoNote>Your progress is saved on this device and browser.</InfoNote>
+      <InfoNote>Your progress is saved to your account, so it's on every device you sign in on.</InfoNote>
     </OnboardingScreen>
   );
 };

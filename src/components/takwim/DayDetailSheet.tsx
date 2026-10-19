@@ -3,7 +3,6 @@ import { PrayerTimes } from "@/components/takwim/PrayerTimes";
 import { ZonePicker } from "@/components/takwim/ZonePicker";
 import { HIJRI_MONTHS, MONTHS_EN, DAY_EN } from "@/data/takwim";
 import { getTakwimYear, isNewHijriMonth, type TakwimDay } from "@/lib/takwim";
-import { cn } from "@/lib/utils";
 import type { DayPrayer } from "@/lib/solat";
 
 interface DayDetailSheetProps {
