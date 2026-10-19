@@ -19,7 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, BookOpen, Flame, Target, Menu, TrendingUp, RefreshCw } from "lucide-react";
 import { getSurahForPage, TOTAL_PAGES } from "@/lib/quran-data";
 import { format, subDays, isToday, parseISO, isPast, endOfDay } from "date-fns";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCampaigns } from "@/hooks/useCampaigns";
 import { useReadingLogs } from "@/hooks/useReadingLogs";
@@ -80,7 +80,7 @@ const Index = () => {
     try {
       await api.updateCampaign(campaignId, { is_active: true });
     } catch (e) {
-      toast.error((e as Error).message);
+      toast({ title: "Couldn't switch reading plan", description: (e as Error).message, variant: "destructive" });
     }
     queryClient.invalidateQueries({ queryKey: ["campaigns"] });
   };
@@ -179,7 +179,7 @@ const Index = () => {
           bestStreak: bestStreak(campaignLogs.map((l) => parseISO(l.created_at))),
         });
       } else {
-        toast.success(m.message);
+        toast({ title: m.message });
       }
     }
   }, [streak, percentage, activeCampaign, isLoading, campaignLogs, totalPages]);

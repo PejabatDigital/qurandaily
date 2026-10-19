@@ -31,6 +31,7 @@ vi.mock("@/components/WeeklyChart", () => ({ default: () => null }));
 vi.mock("@/components/AppMenu", () => ({ default: () => null }));
 
 import Index from "@/pages/Index";
+import { Toaster } from "@/components/ui/toaster";
 
 const plan = (patch: Partial<Campaign> = {}): Campaign => ({
   id: "plan-1",
@@ -56,10 +57,12 @@ const log = (pages: number, marker: number, createdAt: string): ReadingLog => ({
   created_at: createdAt,
 });
 
-function renderHome() {
+function renderHome({ withToasts = false } = {}) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
     <QueryClientProvider client={client}>
+      {/* Before the page, as in App, so it's listening when the page shows a toast. */}
+      {withToasts && <Toaster />}
       <Index />
     </QueryClientProvider>,
   );
@@ -209,10 +212,11 @@ describe("Home", () => {
     expect(screen.queryByText("Khatam complete")).not.toBeInTheDocument();
   });
 
-  it("saves shown milestones to the account", () => {
+  it("shows a milestone message and saves it as shown on the account", async () => {
     data.campaigns = [plan({ id: "plan-3" })];
     data.logs = [{ ...log(160, 161, "2026-10-12T01:00:00Z"), campaign_id: "plan-3" }];
-    renderHome();
+    renderHome({ withToasts: true });
+    expect(await screen.findByText("📖 Quarter of the way there!")).toBeInTheDocument();
     expect(data.milestonesSaved).toEqual([{ id: "plan-3", keys: ["progress-25"] }]);
   });
 
