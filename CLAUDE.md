@@ -109,13 +109,25 @@ still by hand, so `main` can hold unfinished work; don't deploy until Amin says 
   dark), Instrument Sans served from `public/fonts/` (no Google Fonts), Appearance
   (System / Light / Dark, per device, as MyDay), and `public/_headers` like WalletKu's,
   with `connect-src` also allowing api.waktusolat.app.
-- **R2. Shared pieces** (`src/components/ui/` and friends): buttons fully round, 48px
-  fields, cards and lists with 16px corners and no borders, 24px sheets, toasts, tabs as
-  a segmented control.
-- **R3. Each screen:** sign-in, set-up, home, logging, history, plans, calendar, profile.
-- **R4. Our own chart.** Draw the reading graph without a chart library, in Clear day
-  colours (as WalletKu). Recharts is about 100 KB of the 160 KB the app downloads on every
-  open.
+- ✅ **R2. Shared pieces** (built 6 Nov 2026; Amin to look), in `src/components/ui/` plus
+  Chip, OptionCard, InputField, StepDots, InfoNote, ZonePicker, SegmentedControl:
+  buttons fully round (`outline`/`secondary` = soft fill, `destructive` = soft red),
+  48px fields with a blue edge on focus, labels 13px muted, cards 16px corners with no
+  border or shadow, dialogs and sheets 24px corners on a navy-tinted backdrop, toasts as
+  a navy capsule at the top (red for errors), tabs as the Segmented Control, no monospace.
+- ✅ **R3. Each screen** (built 6 Nov 2026; Amin to look): Clear day type scale as
+  Tailwind names (`text-date` 34, `text-title` 22, `text-heading` 17, `text-body` 15,
+  `text-label`, `text-small` 13, `text-caption` 12; use these, not `text-sm` etc.);
+  sentence case everywhere, no capitals-only labels; sub-pages use `PageHeader` (blue
+  Back, then a 34px title, as MyDay's Settings); home's round + is now a floating "Log
+  reading" pill (Clear day Add Bar); header icon buttons are 40px white circles; inner
+  boxes are soft fills, not borders; page inset 20px. Also fixed: deleting a reading plan
+  said its logs would stay, but they're deleted with it (the API always did this).
+- ✅ **R4. Our own chart** (built 6 Nov 2026; Amin to look). `components/WeeklyChart.tsx`
+  draws the Reading activity line in SVG (maths in `lib/chart.ts`, tested), Clear day
+  colours: accent line, hairline grid. 7D shows a dot and the pages on each day; 30D and
+  All show a day's pages when you touch it; the line above the chart says the total.
+  Recharts is removed: the main app file went from 162 KB to 50 KB (compressed).
 - **R5. New app icon** in Clear day colours (needs Amin's design; the green ring stays
   until then).
 - **R6. Amin checks it on his phone; then deploy.**
@@ -132,7 +144,7 @@ in `../../MyDay/MDsite/CLAUDE.md`. QD's own older Figma file (key `wTpm2pUiQgFeV
 holds the green look's welcome and set-up screens; use it for layout only.
 
 **Direction:** modern and minimal. Navy and blue on a cool off-white; one typeface;
-sentence case. Spacing 4/8/12/16/20/24/32/48, radius 12 (fields) / 16 (cards, lists) /
+sentence case. Spacing 4/8/12/16/20/24/32/48 (page inset 20), radius 12 (fields) / 16 (cards, lists) /
 24 (sheets) / full (buttons), shadow only on floating things.
 
 ### Tokens (HSL channels in `src/index.css`, used through Tailwind)
