@@ -2,7 +2,7 @@
 
 A minimalist Quran reading progress tracker. Set a reading plan (goal + finish date), log your daily pages, and track your streak and pace — plus a Malaysia-focused prayer times / Hijri calendar (Takwim) view.
 
-Live at [qurandaily.kasahkod.cc](https://qurandaily.kasahkod.cc/).
+Live at [qurandaily.kasahkod.cc](https://qurandaily.kasahkod.cc/). Decisions, design and what's next are in [CLAUDE.md](CLAUDE.md).
 
 ## User flow
 
