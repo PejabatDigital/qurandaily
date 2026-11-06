@@ -15,10 +15,8 @@ const Chip = ({ children, selected, onSelect }: ChipProps) => (
     aria-checked={selected}
     onClick={onSelect}
     className={cn(
-      "inline-flex h-9 items-center justify-center whitespace-nowrap rounded-full border px-4 text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-      selected
-        ? "border-primary bg-primary text-primary-foreground"
-        : "border-border bg-card text-foreground hover:border-primary/40",
+      "inline-flex h-10 items-center justify-center whitespace-nowrap rounded-full px-4 text-[15px] font-medium leading-5 ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+      selected ? "bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-subtle",
     )}
   >
     {children}

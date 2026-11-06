@@ -13,9 +13,9 @@ const StepDots = ({ current, total }: StepDotsProps) => (
       <span
         key={i}
         className={cn(
-          "h-1.5 rounded-[3px] transition-all",
+          "h-1.5 rounded-full transition-all",
           i + 1 === current ? "w-6" : "w-1.5",
-          i + 1 <= current ? "bg-primary" : "bg-muted",
+          i + 1 <= current ? "bg-primary" : "bg-border",
         )}
       />
     ))}

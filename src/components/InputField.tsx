@@ -34,7 +34,7 @@ const InputField = forwardRef<HTMLInputElement, InputFieldProps>(
             id={messageId}
             role={error ? "alert" : undefined}
             aria-live={error ? undefined : "polite"}
-            className={cn("text-xs", error ? "text-destructive" : "text-muted-foreground")}
+            className={cn("text-[13px] leading-[18px]", error ? "text-destructive" : "text-muted-foreground")}
           >
             {message}
           </p>
