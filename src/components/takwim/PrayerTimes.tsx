@@ -23,7 +23,7 @@ export function PrayerTimes({ year, m, d, highlightKey }: PrayerTimesProps) {
 
   if (isLoading) {
     return (
-      <ul className="grid grid-cols-2 gap-x-6 gap-y-2.5">
+      <ul className="grid grid-cols-2 gap-2">
         {PRAYER_LABELS.map(({ key }) => (
           <li key={key} className="flex items-center justify-between">
             <Skeleton className="h-3 w-14" />
@@ -36,29 +36,29 @@ export function PrayerTimes({ year, m, d, highlightKey }: PrayerTimesProps) {
 
   if (error instanceof SolatUnavailableError) {
     return (
-      <p className="text-xs text-muted-foreground">Prayer times for {year} aren't available yet.</p>
+      <p className="text-small text-muted-foreground">Prayer times for {year} aren't available yet.</p>
     );
   }
 
   if (isError || !prayer) {
     return (
-      <p className="text-xs text-destructive">Could not load prayer times. Please try again.</p>
+      <p className="text-small text-destructive">Couldn't load prayer times. Try again later.</p>
     );
   }
 
   return (
-    <ul className="grid grid-cols-2 gap-x-6 gap-y-2.5">
+    <ul className="grid grid-cols-2 gap-2">
       {PRAYER_LABELS.map(({ key, label }) => (
         <li
           key={key}
           className={cn(
-            "flex items-baseline justify-between border-b border-border/60 pb-1.5 transition-colors",
-            highlightKey === key && "border-primary",
+            "flex items-baseline justify-between rounded-xl bg-card px-3 py-2.5 transition-colors",
+            highlightKey === key && "bg-accent-soft",
           )}
         >
           <span
             className={cn(
-              "text-[11px] font-semibold uppercase tracking-wider",
+              "text-small font-medium",
               highlightKey === key ? "text-primary" : "text-muted-foreground",
             )}
           >
@@ -66,7 +66,7 @@ export function PrayerTimes({ year, m, d, highlightKey }: PrayerTimesProps) {
           </span>
           <span
             className={cn(
-              "text-base font-semibold tabular-nums",
+              "text-heading font-semibold tabular-nums",
               highlightKey === key ? "text-primary" : "text-foreground",
             )}
           >

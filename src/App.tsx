@@ -25,8 +25,8 @@ const PageFallback = () => (
 
 const AuthErrorFallback = ({ message, onRetry }: { message: string; onRetry: () => void }) => (
   <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-6 text-center">
-    <p className="text-sm font-medium">Couldn't reach Quran Daily</p>
-    <p className="text-xs text-muted-foreground">{message}</p>
+    <p className="text-body font-medium">Couldn't reach Quran Daily</p>
+    <p className="text-small text-muted-foreground">{message}</p>
     <Button onClick={onRetry}>Try again</Button>
   </div>
 );

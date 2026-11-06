@@ -33,31 +33,31 @@ const KhatamCelebration = ({ completion, onStartNext, onHome }: KhatamCelebratio
   return (
     <div className="min-h-[100dvh] bg-background">
       <div className="mx-auto flex min-h-[100dvh] max-w-lg flex-col">
-        <main className="flex flex-1 flex-col items-center gap-6 px-4 pt-14">
+        <main className="flex flex-1 flex-col items-center gap-6 px-5 pt-[max(56px,env(safe-area-inset-top))]">
           <div className="flex w-full flex-col items-center gap-3 rounded-2xl bg-primary px-6 py-8 text-center text-primary-foreground">
             <p lang="ar" dir="rtl" className="w-full font-arabic text-[28px] leading-[48px]">
               ٱلْحَمْدُ لِلَّهِ
             </p>
-            <h1 ref={headingRef} tabIndex={-1} className="w-full text-[26px] font-bold leading-8 tracking-[-0.5px] outline-none">
+            <h1 ref={headingRef} tabIndex={-1} className="w-full text-date font-semibold outline-none">
               {khatam ? "Khatam complete" : "Reading plan complete"}
             </h1>
           </div>
 
-          <p className="w-full text-center text-sm text-muted-foreground">
+          <p className="w-full text-center text-body text-muted-foreground">
             You read all {pages} pages in {days} {days === 1 ? "day" : "days"}. MashaAllah, may it be accepted from you.
           </p>
 
           <dl className="flex w-full gap-3">
             {stats.map(([value, label]) => (
-              <div key={label} className="flex flex-1 flex-col-reverse items-center rounded-lg border border-border bg-card p-3">
-                <dt className="text-xs text-muted-foreground">{label}</dt>
-                <dd className="text-xl font-bold text-foreground">{value}</dd>
+              <div key={label} className="flex flex-1 flex-col-reverse items-center rounded-2xl bg-card p-4">
+                <dt className="text-small text-muted-foreground">{label}</dt>
+                <dd className="text-title font-semibold text-foreground">{value}</dd>
               </div>
             ))}
           </dl>
         </main>
 
-        <div className="sticky bottom-0 flex flex-col gap-2 bg-background px-4 pb-8 pt-4">
+        <div className="sticky bottom-0 flex flex-col gap-2 bg-background px-5 pb-[max(32px,env(safe-area-inset-bottom))] pt-4">
           <Button size="lg" className="w-full" onClick={onStartNext}>
             {khatam ? "Start your next khatam" : "Start a new plan"}
           </Button>

@@ -66,12 +66,12 @@ const TodayCard = () => {
   return (
     <>
       <Card className="overflow-hidden">
-        <CardContent className="space-y-3 p-4">
+        <CardContent className="space-y-3 p-5">
           <div className="flex items-start justify-between gap-3">
             <div className="space-y-0.5">
-              <p className="text-sm font-semibold text-foreground">{gregLine}</p>
+              <p className="text-body font-semibold text-foreground">{gregLine}</p>
               {hijriLine && (
-                <p className="text-sm text-primary">
+                <p className="text-body text-primary">
                   {hijriLine}
                 </p>
               )}
@@ -82,7 +82,7 @@ const TodayCard = () => {
           <button
             type="button"
             onClick={() => setSheetOpen(true)}
-            className="block w-full rounded-lg border border-border bg-muted/40 p-3 text-left transition-colors hover:bg-muted/60 active:bg-muted"
+            className="block w-full rounded-xl bg-subtle px-4 py-3 text-left transition-colors hover:bg-border/60 active:bg-border"
             aria-label="Show prayer times"
           >
             {isLoading ? (
@@ -91,28 +91,28 @@ const TodayCard = () => {
                 <Skeleton className="h-4 w-16" />
               </div>
             ) : error instanceof SolatUnavailableError ? (
-              <p className="text-xs text-muted-foreground">Prayer times aren't available yet.</p>
+              <p className="text-small text-muted-foreground">Prayer times aren't available yet.</p>
             ) : isError || !prayer ? (
-              <p className="text-xs text-destructive">Could not load prayer times.</p>
+              <p className="text-small text-destructive">Could not load prayer times.</p>
             ) : nextPrayer ? (
               <div className="flex items-baseline justify-between gap-3">
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <p className="text-small font-medium text-muted-foreground">
                     Next prayer
                   </p>
-                  <p className="text-base font-semibold text-foreground">
+                  <p className="text-heading font-semibold text-foreground">
                     {nextPrayer.label}{" "}
-                    <span className="text-sm font-normal text-muted-foreground">
+                    <span className="text-body font-normal text-muted-foreground">
                       in {formatCountdown(nextPrayer.msUntil)}
                     </span>
                   </p>
                 </div>
-                <span className="text-lg font-semibold tabular-nums text-primary">
+                <span className="text-heading font-semibold tabular-nums text-primary">
                   {formatPrayerTime(nextPrayer.unix)}
                 </span>
               </div>
             ) : (
-              <p className="text-xs text-muted-foreground">All prayers completed for today.</p>
+              <p className="text-small text-muted-foreground">All prayers completed for today.</p>
             )}
           </button>
         </CardContent>

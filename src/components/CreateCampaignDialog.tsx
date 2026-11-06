@@ -133,11 +133,11 @@ const CreateCampaignDialog = ({ open, onOpenChange, onCreated, campaign, focusEn
           />
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label>Start Surah</Label>
+              <Label>Start surah</Label>
               <SurahSelect value={startSurah} onValueChange={setStartSurah} />
             </div>
             <div className="space-y-2">
-              <Label>End Surah</Label>
+              <Label>End surah</Label>
               <SurahSelect value={endSurah} onValueChange={setEndSurah} />
             </div>
           </div>

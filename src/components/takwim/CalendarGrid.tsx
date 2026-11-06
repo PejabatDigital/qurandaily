@@ -30,12 +30,12 @@ export function CalendarGrid({
 
   return (
     <section className="space-y-3">
-      <div className="grid grid-cols-7 border-b border-border pb-2 text-center">
+      <div className="grid grid-cols-7 pb-1 text-center">
         {DOW_SHORT.map((d, i) => (
           <div
             key={d}
             className={cn(
-              "text-[10px] font-semibold uppercase tracking-wider",
+              "text-caption font-medium",
               i === 5 ? "text-primary" : "text-muted-foreground",
             )}
           >
@@ -62,22 +62,22 @@ export function CalendarGrid({
               ref={(el) => { cellRefs.current[d] = el; }}
               onClick={() => onSelect({ year, m, d })}
               className={cn(
-                "group relative flex aspect-[1/1.1] flex-col items-center justify-center rounded-lg border border-transparent bg-card px-0.5 py-1.5 text-center transition-all hover:border-border hover:shadow-sm",
-                isToday && "border-primary/40 ring-1 ring-primary/15",
+                "group relative flex aspect-[1/1.1] flex-col items-center justify-center rounded-xl px-0.5 py-1.5 text-center transition-colors hover:bg-subtle",
+                isToday && "bg-accent-soft hover:bg-accent-soft",
                 isHighlight && "ring-2 ring-primary ring-offset-2 ring-offset-background",
               )}
             >
               <span
                 className={cn(
-                  "text-base font-semibold leading-none sm:text-lg",
-                  isFri ? "text-primary" : "text-foreground",
+                  "text-heading font-semibold leading-none sm:text-title",
+                  isFri || isToday ? "text-primary" : "text-foreground",
                 )}
               >
                 {gregDay}
               </span>
-              <span className="mt-1 text-xs leading-none text-muted-foreground">{hDay}</span>
+              <span className="mt-1 text-small leading-none text-muted-foreground">{hDay}</span>
               {isNew && (
-                <span className="mt-0.5 hidden text-[9px] font-semibold uppercase tracking-wide text-primary sm:block">
+                <span className="mt-0.5 hidden text-caption font-medium text-primary sm:block">
                   {HIJRI_MONTHS[hMonth].slice(0, 5)}
                 </span>
               )}
@@ -89,15 +89,15 @@ export function CalendarGrid({
         })}
       </div>
 
-      <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 pt-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+      <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 pt-2 text-caption text-muted-foreground">
         <span className="inline-flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full border border-primary/60 bg-card" /> Today
+          <span className="h-2.5 w-2.5 rounded-full bg-accent-soft ring-1 ring-primary/40" /> Today
         </span>
         <span className="inline-flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-primary" /> New Hijri month
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <span className="h-2 w-3 rounded-sm bg-primary/70" /> Friday
+          <span className="h-2 w-3 rounded-full bg-primary/70" /> Friday
         </span>
       </div>
     </section>

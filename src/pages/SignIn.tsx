@@ -97,7 +97,7 @@ const SignIn = () => {
   };
 
   const footer = (
-    <p className="pt-2 text-xs text-muted-foreground">
+    <p className="pt-2 text-caption text-muted-foreground">
       <Link to="/privacy" className="underline underline-offset-2">Privacy</Link>
       <span className="px-2 opacity-70">·</span>
       <span className="font-medium opacity-70">{"{ kasah kod }"}</span>
@@ -160,7 +160,7 @@ const SignIn = () => {
           </Button>
           <Button
             variant="link"
-            className="h-auto p-0 text-xs text-muted-foreground"
+            className="h-auto p-0 text-small text-muted-foreground"
             onClick={() => {
               remember(null);
               setCode("");
@@ -188,12 +188,12 @@ const SignIn = () => {
           pattern="[0-9]*"
           maxLength={6}
           placeholder="123456"
-          className="text-lg tracking-[0.3em]"
+          className="text-title font-semibold tracking-[0.3em]"
           value={code}
           error={codeMessage}
           onChange={(e) => changeCode(e.target.value)}
         />
-        <p className="pt-2 text-xs text-muted-foreground">Check your spam folder</p>
+        <p className="pt-2 text-small text-muted-foreground">Check your spam folder</p>
       </form>
     </OnboardingScreen>
   );

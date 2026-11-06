@@ -69,20 +69,20 @@ const FinishStep = ({ draft, plan, update, onBack, onNext, today, ramadanEnd }: 
       )}
 
       {plan.finishDate && plan.perDay !== null && (
-        <Card className="w-full space-y-1 p-4" aria-live="polite">
-          <p className="text-xs text-muted-foreground">Finishes {format(plan.finishDate, "EEEE, d MMMM yyyy")}</p>
+        <Card className="w-full space-y-1 p-5" aria-live="polite">
+          <p className="text-small text-muted-foreground">Finishes {format(plan.finishDate, "EEEE, d MMMM yyyy")}</p>
           <p className="flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-primary">{plan.perDay}</span>
-            <span className="text-base font-semibold text-foreground">
+            <span className="text-date font-semibold text-primary">{plan.perDay}</span>
+            <span className="text-heading font-semibold text-foreground">
               {plan.perDay === 1 ? "page a day" : "pages a day"}
             </span>
           </p>
-          <p className="text-sm text-foreground">About {pagesLabel(pagesPerPrayer(plan.perDay))} after each prayer.</p>
+          <p className="text-body text-foreground">About {pagesLabel(pagesPerPrayer(plan.perDay))} after each prayer.</p>
         </Card>
       )}
 
       {ramadanEnd && ramadanPace !== null && (
-        <p className="w-full text-xs text-muted-foreground">
+        <p className="w-full text-small text-muted-foreground">
           "End of Ramadan" uses JAKIM's date ({format(ramadanEnd, "d MMMM yyyy")}): about {pagesLabel(ramadanPace)} a day.
         </p>
       )}

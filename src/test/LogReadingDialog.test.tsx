@@ -35,10 +35,10 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("LogReadingDialog", () => {
-  it("opens on By Count, with By Page second", () => {
+  it("opens on By count, with By page second", () => {
     renderDialog(1);
     const tabs = screen.getAllByRole("tab");
-    expect(tabs.map((t) => t.textContent)).toEqual(["By Count", "By Page"]);
+    expect(tabs.map((t) => t.textContent)).toEqual(["By count", "By page"]);
     expect(tabs[0]).toHaveAttribute("aria-selected", "true");
     expect(screen.getByLabelText("How many pages did you read?")).toBeInTheDocument();
   });
@@ -46,7 +46,7 @@ describe("LogReadingDialog", () => {
   it("asks for the last page read and counts it, completing a khatam on page 604", async () => {
     // Last session ended on page 603, so the reader is on 604.
     const { onLogged } = renderDialog(604);
-    fireEvent.mouseDown(screen.getByRole("tab", { name: "By Page" }));
+    fireEvent.mouseDown(screen.getByRole("tab", { name: "By page" }));
     fireEvent.change(screen.getByLabelText("What is the last page you read?"), { target: { value: "604" } });
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
     await waitFor(() => expect(onLogged).toHaveBeenCalled());
@@ -63,7 +63,7 @@ describe("LogReadingDialog", () => {
 
   it("keeps the last page read within the plan", () => {
     renderDialog(590, { ...plan, start_page: 582 });
-    fireEvent.mouseDown(screen.getByRole("tab", { name: "By Page" }));
+    fireEvent.mouseDown(screen.getByRole("tab", { name: "By page" }));
     fireEvent.change(screen.getByLabelText("What is the last page you read?"), { target: { value: "605" } });
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
     expect(screen.getByRole("alert")).toHaveTextContent("Enter a page between 582 and 604.");

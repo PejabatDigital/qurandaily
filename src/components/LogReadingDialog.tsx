@@ -91,15 +91,15 @@ const LogReadingDialog = ({ open, onOpenChange, campaign, lastPageMarker, onLogg
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle>Log Reading</DialogTitle>
+          <DialogTitle>Log reading</DialogTitle>
           <DialogDescription>
             Currently on page {onPage} — {getSurahForPage(onPage)}
           </DialogDescription>
         </DialogHeader>
         <Tabs defaultValue="count" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="count">By Count</TabsTrigger>
-            <TabsTrigger value="page">By Page</TabsTrigger>
+            <TabsTrigger value="count">By count</TabsTrigger>
+            <TabsTrigger value="page">By page</TabsTrigger>
           </TabsList>
           <TabsContent value="count" className="space-y-4 pt-2">
             <InputField

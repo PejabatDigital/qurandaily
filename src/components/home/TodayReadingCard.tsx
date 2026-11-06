@@ -13,15 +13,15 @@ const TodayReadingCard = ({ pagesToday, dailyTarget, onLog }: TodayReadingCardPr
   const progress = dailyTarget > 0 ? Math.min(100, (pagesToday / dailyTarget) * 100) : 0;
 
   return (
-    <Card className="space-y-3 p-4">
-      <div className="flex items-start justify-between gap-3 text-sm">
+    <Card className="space-y-3 p-5">
+      <div className="flex items-start justify-between gap-3 text-body">
         <p className="font-semibold text-foreground">Today's reading</p>
         <p className="text-muted-foreground">
           {pagesToday} of {dailyTarget} {dailyTarget === 1 ? "page" : "pages"}
         </p>
       </div>
       <div
-        className="h-2 w-full overflow-hidden rounded-full bg-muted"
+        className="h-2 w-full overflow-hidden rounded-full bg-border"
         role="progressbar"
         aria-label="Today's reading"
         aria-valuemin={0}
@@ -30,7 +30,7 @@ const TodayReadingCard = ({ pagesToday, dailyTarget, onLog }: TodayReadingCardPr
       >
         <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${progress}%` }} />
       </div>
-      <p className="text-xs text-muted-foreground">Bismillah. Log what you read today and your streak starts.</p>
+      <p className="text-small text-muted-foreground">Bismillah. Log what you read today and your streak starts.</p>
       <Button className="w-full" onClick={onLog}>
         <Plus /> Log your first reading
       </Button>

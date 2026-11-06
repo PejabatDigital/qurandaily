@@ -4,13 +4,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import PageHeader from "@/components/PageHeader";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import DeleteAccountDialog from "@/components/DeleteAccountDialog";
 import SegmentedControl from "@/components/SegmentedControl";
 import { type Appearance, getAppearance, setAppearance } from "@/lib/appearance";
-import { ArrowLeft, User } from "lucide-react";
 
 const Profile = () => {
   const { user, signOut, deleteAccount } = useAuth();
@@ -37,7 +37,7 @@ const Profile = () => {
     updateProfile.mutate(
       { display_name: displayName },
       {
-        onSuccess: () => toast({ title: "Profile updated successfully!" }),
+        onSuccess: () => toast({ title: "Profile saved" }),
         onError: (error) => toast({ title: "Error", description: error.message, variant: "destructive" }),
       },
     );
@@ -62,27 +62,14 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
-        <div className="mx-auto flex max-w-lg items-center gap-3 px-4 py-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="text-lg font-bold tracking-tight">Profile</h1>
-        </div>
-      </header>
+      <PageHeader title="Profile" onBack={() => navigate("/")} />
 
-      <main className="mx-auto max-w-lg px-4 py-6 space-y-6">
-        <div className="flex flex-col items-center gap-3">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-            <User className="h-8 w-8 text-primary" />
-          </div>
-        </div>
-
+      <main className="mx-auto max-w-lg px-5 pb-12 pt-4 space-y-6">
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-5">
             <form onSubmit={handleSave} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="display-name">Display Name</Label>
+                <Label htmlFor="display-name">Display name</Label>
                 <Input
                   id="display-name"
                   placeholder="Your name"
@@ -99,7 +86,7 @@ const Profile = () => {
         </Card>
 
         <section className="space-y-2">
-          <h2 className="px-1 text-sm font-semibold text-foreground">Appearance</h2>
+          <h2 className="px-2 text-small font-medium text-muted-foreground">Appearance</h2>
           <SegmentedControl
             label="Appearance"
             value={appearance}
@@ -110,23 +97,23 @@ const Profile = () => {
               { value: "dark", label: "Dark" },
             ]}
           />
-          <p className="px-1 text-xs text-muted-foreground">Saved on this device.</p>
+          <p className="px-2 text-small text-muted-foreground">Saved on this device.</p>
         </section>
 
         <section className="space-y-2">
-          <h2 className="px-1 text-sm font-semibold text-foreground">Account</h2>
+          <h2 className="px-2 text-small font-medium text-muted-foreground">Account</h2>
           <Card>
-            <CardContent className="space-y-4 p-4">
+            <CardContent className="space-y-4 p-5">
               <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">Signed in as</p>
-                <p className="break-all text-sm font-medium">{profile?.email ?? user?.email}</p>
+                <p className="text-small text-muted-foreground">Signed in as</p>
+                <p className="break-all text-body font-medium">{profile?.email ?? user?.email}</p>
               </div>
               <Button variant="outline" className="w-full" onClick={handleSignOut} disabled={signingOut}>
                 {signingOut ? "Signing out..." : "Sign out"}
               </Button>
               <Button
                 variant="ghost"
-                className="w-full text-destructive hover:bg-destructive/10 hover:text-destructive"
+                className="w-full text-destructive hover:bg-danger-soft hover:text-destructive"
                 onClick={() => setDeleteOpen(true)}
               >
                 Delete my account

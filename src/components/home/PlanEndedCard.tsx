@@ -20,10 +20,10 @@ interface PlanEndedCardProps {
 const PlanEndedCard = ({
   endDate, page, endPage, percentage, pagesRemaining, wholeQuran, onExtend, onNewPlan,
 }: PlanEndedCardProps) => (
-  <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-border bg-card p-6 text-center">
+  <div className="flex flex-col items-center gap-3 rounded-2xl bg-card p-6 text-center">
     <Calendar className="h-8 w-8 text-primary" aria-hidden />
-    <p className="text-base font-semibold text-foreground">Your plan ended on {format(endDate, "d MMM")}</p>
-    <p className="text-sm text-muted-foreground">
+    <p className="text-heading font-semibold text-foreground">Your plan ended on {format(endDate, "d MMM")}</p>
+    <p className="text-body text-muted-foreground">
       You reached page {page} of {endPage}. That's {Math.round(percentage)}% of {wholeQuran ? "the Quran" : "your plan"}.{" "}
       {pagesLabel(pagesRemaining)} to go.
     </p>

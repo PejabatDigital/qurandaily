@@ -22,7 +22,7 @@ interface OnboardingScreenProps {
 
 export function ScreenTitle({ children }: { children: ReactNode }) {
   return (
-    <h1 tabIndex={-1} className="text-[26px] font-bold leading-8 tracking-[-0.5px] text-foreground outline-none">
+    <h1 tabIndex={-1} className="text-date font-semibold text-foreground outline-none">
       {children}
     </h1>
   );
@@ -45,8 +45,8 @@ const OnboardingScreen = ({
     <div className="min-h-[100dvh] bg-background">
       <div className="mx-auto flex min-h-[100dvh] max-w-lg flex-col">
         {step !== undefined && (
-          <div className="flex items-center justify-between px-4 py-3">
-            <Button variant="ghost" size="icon" onClick={onBack} aria-label="Back">
+          <div className="flex items-center justify-between px-5 pb-3 pt-[max(12px,env(safe-area-inset-top))]">
+            <Button variant="ghost" size="icon" className="bg-card" onClick={onBack} aria-label="Back">
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <StepDots current={step} total={SETUP_STEPS} />
@@ -57,7 +57,7 @@ const OnboardingScreen = ({
         <main
           ref={mainRef}
           className={cn(
-            "flex flex-1 flex-col gap-6 px-4",
+            "flex flex-1 flex-col gap-6 px-5",
             step !== undefined ? "pt-2" : topPadding,
             centered && "items-center",
           )}
@@ -65,13 +65,13 @@ const OnboardingScreen = ({
           {title && (
             <div className={cn("w-full space-y-2", centered && "text-center")}>
               <ScreenTitle>{title}</ScreenTitle>
-              {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
+              {subtitle && <p className="text-body text-muted-foreground">{subtitle}</p>}
             </div>
           )}
           {children}
         </main>
 
-        <div className="sticky bottom-0 flex flex-col items-center gap-2 bg-background px-4 pb-8 pt-4">
+        <div className="sticky bottom-0 flex flex-col items-center gap-2 bg-background px-5 pb-[max(32px,env(safe-area-inset-bottom))] pt-4">
           {actions}
         </div>
       </div>

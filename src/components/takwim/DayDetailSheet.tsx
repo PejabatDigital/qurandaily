@@ -31,20 +31,20 @@ export function DayDetailSheet({ selected, onOpenChange, highlightPrayer }: DayD
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="bottom"
-        className="mx-auto max-w-lg rounded-t-2xl border-border p-0"
+        className="p-0"
       >
-        <div className="mx-auto mt-2 h-1 w-9 rounded-full bg-border" />
+        <div className="mx-auto mt-3 h-1 w-10 rounded-full bg-border" />
         {detail && (
-          <div className="space-y-4 px-5 pt-4 pb-[max(5rem,env(safe-area-inset-bottom))]">
+          <div className="space-y-5 px-5 pb-[max(32px,env(safe-area-inset-bottom))] pt-4">
             <SheetHeader className="space-y-1 text-left">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <p className="text-small font-medium text-muted-foreground">
                 {DAY_EN[detail.dayCode]} · {detail.gregMonth} {selected.year}
               </p>
               <div className="flex items-baseline gap-3">
-                <SheetTitle className="text-5xl font-bold leading-none tracking-tight">
+                <SheetTitle className="text-[48px] font-semibold leading-[52px] tracking-[-0.02em]">
                   {detail.gregDay}
                 </SheetTitle>
-                <span className="text-base text-primary">
+                <span className="text-heading text-primary">
                   {detail.hDay} {HIJRI_MONTHS[detail.hMonth]} {detail.hYear} H
                 </span>
               </div>
@@ -53,21 +53,21 @@ export function DayDetailSheet({ selected, onOpenChange, highlightPrayer }: DayD
             {(detail.dayCode === "J" || detail.isNew) && (
               <div className="flex flex-wrap items-center gap-2">
                 {detail.dayCode === "J" && (
-                  <span className="rounded-full bg-primary px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary-foreground">
+                  <span className="rounded-full bg-accent-soft px-2.5 py-1 text-caption font-medium text-primary">
                     Friday
                   </span>
                 )}
                 {detail.isNew && (
-                  <span className="rounded-full border border-primary px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
+                  <span className="rounded-full bg-accent-soft px-2.5 py-1 text-caption font-medium text-primary">
                     ☾ New {HIJRI_MONTHS[detail.hMonth]}
                   </span>
                 )}
               </div>
             )}
 
-            <div className="border-t pt-4">
-              <div className="mb-3 flex items-center justify-between">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <div className="space-y-3 rounded-2xl bg-subtle p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-heading font-semibold text-foreground">
                   Prayer times
                 </p>
                 <ZonePicker />

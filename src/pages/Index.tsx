@@ -200,15 +200,15 @@ const Index = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
-          <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
+        <header className="sticky top-0 z-40 bg-background/95 pt-[env(safe-area-inset-top)] backdrop-blur">
+          <div className="mx-auto flex max-w-lg items-center justify-between px-5 py-3">
             <div className="flex items-center gap-2">
-              <Skeleton className="h-10 w-10 rounded-md" />
+              <Skeleton className="h-10 w-10 rounded-full" />
               <Skeleton className="h-5 w-28" />
             </div>
           </div>
         </header>
-        <main className="mx-auto max-w-lg px-4 pb-24 pt-6 space-y-6">
+        <main className="mx-auto max-w-lg space-y-4 px-5 pb-32 pt-2">
           <div className="space-y-2">
             <Skeleton className="h-3 w-40" />
             <Skeleton className="h-4 w-full" />
@@ -221,7 +221,7 @@ const Index = () => {
             {Array.from({ length: 4 }).map((_, i) => (
               <Card key={i}>
                 <CardContent className="flex items-center gap-3 p-4">
-                  <Skeleton className="h-9 w-9 rounded-lg" />
+                  <Skeleton className="h-9 w-9 rounded-xl" />
                   <div className="space-y-1.5">
                     <Skeleton className="h-5 w-8" />
                     <Skeleton className="h-3 w-12" />
@@ -232,7 +232,7 @@ const Index = () => {
           </div>
           <Card>
             <CardContent className="p-4">
-              <Skeleton className="h-[180px] w-full rounded-md" />
+              <Skeleton className="h-[180px] w-full" />
             </CardContent>
           </Card>
         </main>
@@ -288,21 +288,21 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
-        <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => setMenuOpen(true)} aria-label="Open menu">
+      <header className="sticky top-0 z-40 bg-background/95 pt-[env(safe-area-inset-top)] backdrop-blur">
+        <div className="mx-auto flex max-w-lg items-center justify-between px-5 py-3">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" className="bg-card" onClick={() => setMenuOpen(true)} aria-label="Open menu">
               <Menu className="h-5 w-5" />
             </Button>
-            <h1 className="text-lg font-bold tracking-tight">Quran Daily</h1>
+            <h1 className="text-heading font-semibold">Quran Daily</h1>
           </div>
-          <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" onClick={handleRefresh} disabled={isRefreshing} aria-label="Refresh">
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="bg-card" onClick={handleRefresh} disabled={isRefreshing} aria-label="Refresh">
               <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
             </Button>
             {campaigns.length > 1 && (
               <Select value={selectedCampaignId || ""} onValueChange={switchCampaign}>
-                <SelectTrigger className="w-auto max-w-[160px] h-8 text-xs">
+                <SelectTrigger className="h-10 w-auto max-w-[160px] rounded-full bg-card text-label font-medium">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -316,7 +316,7 @@ const Index = () => {
         </div>
       </header>
 
-      <main className="mx-auto max-w-lg px-4 pb-24 pt-6 space-y-6">
+      <main className="mx-auto max-w-lg space-y-4 px-5 pb-32 pt-2">
         {showCatchUp && activeCampaign && (
           <CatchUpCard
             pagesBehind={behind}
@@ -351,12 +351,12 @@ const Index = () => {
 
         {activeCampaign && (
           <>
-            <div className="flex flex-col items-center space-y-2">
+            <div className="flex flex-col items-center space-y-2 py-2">
               <CircularProgress percentage={percentage} />
-              <p className="text-sm text-muted-foreground">
+              <p className="text-body text-muted-foreground">
                 Page {onPage}, {getSurahForPage(onPage)}
               </p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-small text-muted-foreground">
                 {activeCampaign.title} · {isCampaignExpired
                   ? `ended ${format(parseISO(activeCampaign.end_date), "d MMM")}`
                   : `ends ${format(parseISO(activeCampaign.end_date), "d MMM")} · ${daysRemaining} day${daysRemaining !== 1 ? "s" : ""} left`}
@@ -366,45 +366,45 @@ const Index = () => {
             <div className="grid grid-cols-2 gap-3">
               <Card>
                 <CardContent className="flex items-center gap-3 p-4">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-soft">
                     <BookOpen className="h-4 w-4 text-primary" />
                   </div>
                   <div>
-                    <p className="text-xl font-bold">{pagesReadToday}</p>
-                    <p className="text-xs text-muted-foreground">Today</p>
+                    <p className="text-title font-semibold">{pagesReadToday}</p>
+                    <p className="text-small text-muted-foreground">Today</p>
                   </div>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="flex items-center gap-3 p-4">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-soft">
                     <TrendingUp className="h-4 w-4 text-primary" />
                   </div>
                   <div>
-                    <p className="text-xl font-bold">{pagesRead}</p>
-                    <p className="text-xs text-muted-foreground">Total read</p>
+                    <p className="text-title font-semibold">{pagesRead}</p>
+                    <p className="text-small text-muted-foreground">Total read</p>
                   </div>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="flex items-center gap-3 p-4">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-soft">
                     <Target className="h-4 w-4 text-primary" />
                   </div>
                   <div>
-                    <p className="text-xl font-bold">{isCampaignExpired ? "–" : dailyTarget}</p>
-                    <p className="text-xs text-muted-foreground">Pages/day</p>
+                    <p className="text-title font-semibold">{isCampaignExpired ? "–" : dailyTarget}</p>
+                    <p className="text-small text-muted-foreground">Pages/day</p>
                   </div>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="flex items-center gap-3 p-4">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-soft">
                     <Flame className="h-4 w-4 text-primary" />
                   </div>
                   <div>
-                    <p className="text-xl font-bold">{streak}</p>
-                    <p className="text-xs text-muted-foreground">Day streak</p>
+                    <p className="text-title font-semibold">{streak}</p>
+                    <p className="text-small text-muted-foreground">Day streak</p>
                   </div>
                 </CardContent>
               </Card>
@@ -418,10 +418,11 @@ const Index = () => {
       {activeCampaign && !isCampaignExpired && !showFirstLog && (
         <button
           onClick={() => setLogOpen(true)}
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 active:scale-95"
-          aria-label="Log reading"
+          // Clear day Add Bar: a floating pill at the bottom.
+          className="fixed bottom-[max(24px,env(safe-area-inset-bottom))] left-1/2 z-50 flex h-14 w-[min(358px,calc(100%-32px))] -translate-x-1/2 items-center justify-center gap-2 rounded-full bg-primary text-heading font-medium text-primary-foreground shadow-float transition-transform active:scale-[0.98]"
         >
-          <Plus className="h-6 w-6" />
+          <Plus className="h-5 w-5" aria-hidden />
+          Log reading
         </button>
       )}
 

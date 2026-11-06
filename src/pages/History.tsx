@@ -4,11 +4,12 @@ import { api } from "@/lib/api";
 import type { ReadingLog } from "@/lib/api-types";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import PageHeader from "@/components/PageHeader";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { getSurahForPage, TOTAL_PAGES } from "@/lib/quran-data";
 import { useQueryClient } from "@tanstack/react-query";
@@ -75,54 +76,47 @@ const History = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
-        <div className="mx-auto flex max-w-lg items-center gap-3 px-4 py-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="text-lg font-bold tracking-tight">Reading History</h1>
-        </div>
-      </header>
+      <PageHeader title="Reading history" onBack={() => navigate("/")} />
 
-      <main className="mx-auto max-w-lg px-4 py-6 space-y-3">
+      <main className="mx-auto max-w-lg px-5 pb-12 pt-4 space-y-3">
         {logsLoading ? (
           Array.from({ length: 4 }).map((_, i) => (
             <Card key={i}>
-              <CardContent className="flex items-center justify-between p-4">
+              <CardContent className="flex items-center justify-between gap-3 py-4 pl-5 pr-3">
                 <div className="space-y-2 flex-1">
                   <Skeleton className="h-4 w-40" />
                   <Skeleton className="h-3 w-52" />
                   <Skeleton className="h-3 w-36" />
                 </div>
-                <div className="flex gap-1">
-                  <Skeleton className="h-10 w-10 rounded-md" />
-                  <Skeleton className="h-10 w-10 rounded-md" />
+                <div className="flex shrink-0 gap-1">
+                  <Skeleton className="h-10 w-10 rounded-full" />
+                  <Skeleton className="h-10 w-10 rounded-full" />
                 </div>
               </CardContent>
             </Card>
           ))
         ) : logs.length === 0 ? (
-          <p className="py-12 text-center text-sm text-muted-foreground">No reading logs yet.</p>
+          <p className="py-12 text-center text-body text-muted-foreground">No reading logs yet.</p>
         ) : (
           logs.map((log) => (
             <Card key={log.id}>
-              <CardContent className="flex items-center justify-between p-4">
+              <CardContent className="flex items-center justify-between gap-3 py-4 pl-5 pr-3">
                 <div>
-                  <p className="text-sm font-medium">
+                  <p className="text-body font-medium">
                     {log.pages_read} page{log.pages_read !== 1 ? "s" : ""} — Page {Math.min(log.current_page_marker, TOTAL_PAGES)}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-small text-muted-foreground">
                     {getSurahForPage(log.current_page_marker)} · {campaignMap[log.campaign_id] || "Unknown"}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-small text-muted-foreground">
                     {format(parseISO(log.created_at), "MMM d, yyyy · h:mm a")}
                   </p>
                 </div>
-                <div className="flex gap-1">
-                  <Button variant="ghost" size="icon" onClick={() => openEdit(log)}>
+                <div className="flex shrink-0 gap-1">
+                  <Button variant="ghost" size="icon" aria-label="Edit" onClick={() => openEdit(log)}>
                     <Pencil className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={() => setDeleteId(log.id)}>
+                  <Button variant="ghost" size="icon" aria-label="Delete" onClick={() => setDeleteId(log.id)}>
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
                 </div>
@@ -135,24 +129,24 @@ const History = () => {
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Edit Reading Log</DialogTitle>
-            <DialogDescription>Update the details of this reading session.</DialogDescription>
+            <DialogTitle>Edit reading log</DialogTitle>
+            <DialogDescription>Change the pages, page or time of this reading.</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSave} className="space-y-4">
             <div className="space-y-2">
-              <Label>Pages Read</Label>
+              <Label>Pages read</Label>
               <Input type="number" min={1} value={pagesRead} onChange={(e) => setPagesRead(e.target.value)} required />
             </div>
             <div className="space-y-2">
-              <Label>Page Marker</Label>
+              <Label>Next page to read</Label>
               <Input type="number" min={1} max={TOTAL_PAGES + 1} value={pageMarker} onChange={(e) => setPageMarker(e.target.value)} required />
             </div>
             <div className="space-y-2">
-              <Label>Date & Time</Label>
+              <Label>Date and time</Label>
               <Input type="datetime-local" value={logDate} onChange={(e) => setLogDate(e.target.value)} required />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Saving..." : "Update Log"}
+              {loading ? "Saving..." : "Save"}
             </Button>
           </form>
         </DialogContent>
@@ -162,8 +156,8 @@ const History = () => {
         open={!!deleteId}
         onOpenChange={(open) => !open && setDeleteId(null)}
         onConfirm={handleDelete}
-        title="Delete Reading Log"
-        description="This will permanently remove this reading log entry."
+        title="Delete reading log"
+        description="This removes this reading from your history. It can't be undone."
       />
     </div>
   );

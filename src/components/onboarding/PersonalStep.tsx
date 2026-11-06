@@ -41,7 +41,7 @@ const PersonalStep = ({ draft, update, onBack, onNext }: StepProps) => {
       <div className="w-full space-y-2">
         <Label htmlFor={zoneId}>Prayer times zone</Label>
         <ZonePicker variant="field" id={zoneId} aria-describedby={zoneHelpId} />
-        <p id={zoneHelpId} className="text-xs text-muted-foreground">
+        <p id={zoneHelpId} className="text-small text-muted-foreground">
           Shows the next prayer on your home screen.
         </p>
       </div>

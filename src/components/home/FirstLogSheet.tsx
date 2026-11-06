@@ -24,26 +24,26 @@ const FirstLogSheet = ({ log, onClose }: FirstLogSheetProps) => (
       side="bottom"
       hideClose
       overlayClassName="bg-foreground/35"
-      className="mx-auto flex max-w-lg flex-col items-center gap-4 rounded-t-3xl border-0 bg-card px-6 pb-10 pt-6 text-center"
+      className="mx-auto flex max-w-lg flex-col items-center gap-4 rounded-t-3xl bg-card px-6 pb-[max(32px,env(safe-area-inset-bottom))] pt-3 text-center"
     >
       {log && (
         <>
-          <div className="h-1 w-10 rounded-sm bg-border" aria-hidden />
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+          <div className="mb-2 h-1 w-10 rounded-full bg-border" aria-hidden />
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-accent-soft">
             <Check className="h-7 w-7 text-primary" aria-hidden />
           </div>
-          <SheetTitle className="text-[26px] font-bold leading-8 tracking-[-0.5px] text-foreground">
+          <SheetTitle className="text-title font-semibold text-foreground">
             First reading logged
           </SheetTitle>
-          <SheetDescription className="text-sm text-muted-foreground">
+          <SheetDescription className="text-body text-muted-foreground">
             {pagesLabel(log.pagesRead)}. You're now on page {log.page}, {getSurahForPage(log.page)}.
           </SheetDescription>
-          <div className="flex items-center gap-2 rounded-full bg-primary/10 p-3">
+          <div className="flex items-center gap-2 rounded-full bg-accent-soft px-4 py-2.5">
             <Flame className="h-4 w-4 text-primary" aria-hidden />
-            <span className="text-sm font-medium text-primary">Day 1 of your streak</span>
+            <span className="text-body font-medium text-primary">Day 1 of your streak</span>
           </div>
           {log.remainingToday > 0 && (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-small text-muted-foreground">
               {log.remainingToday} more {log.remainingToday === 1 ? "page" : "pages"} today keeps you on track.
             </p>
           )}

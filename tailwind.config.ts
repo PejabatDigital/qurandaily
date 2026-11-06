@@ -20,6 +20,16 @@ export default {
         // Instrument Sans has no Arabic letters: the device's own Arabic font.
         arabic: ['"SF Arabic"', '"Geeza Pro"', '"Noto Naskh Arabic"', "serif"],
       },
+      // Clear day's type scale (MyDay's CLAUDE.md). Use these names in new code.
+      fontSize: {
+        date: ["34px", { lineHeight: "40px", letterSpacing: "-0.02em" }],
+        title: ["22px", { lineHeight: "28px" }],
+        heading: ["17px", { lineHeight: "24px" }],
+        body: ["15px", { lineHeight: "22px" }],
+        label: ["15px", { lineHeight: "20px" }],
+        small: ["13px", { lineHeight: "18px" }],
+        caption: ["12px", { lineHeight: "16px" }],
+      },
       // Clear day uses 400, 500 and 600 only; "bold" is 600.
       fontWeight: { bold: "600" },
       boxShadow: { float: "var(--shadow)" },

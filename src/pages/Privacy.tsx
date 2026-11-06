@@ -1,12 +1,11 @@
 import type { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import PageHeader from "@/components/PageHeader";
 
 const Section = ({ title, children }: { title: string; children: ReactNode }) => (
   <section className="space-y-2">
-    <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-    <div className="space-y-2 text-sm leading-relaxed text-muted-foreground">{children}</div>
+    <h2 className="text-heading font-semibold text-foreground">{title}</h2>
+    <div className="space-y-2 text-body leading-relaxed text-muted-foreground">{children}</div>
   </section>
 );
 
@@ -16,17 +15,10 @@ const Privacy = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
-        <div className="mx-auto flex max-w-lg items-center gap-3 px-4 py-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/")} aria-label="Back">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="text-lg font-bold tracking-tight">Privacy</h1>
-        </div>
-      </header>
+      <PageHeader title="Privacy" onBack={() => navigate("/")} />
 
-      <main className="mx-auto max-w-lg space-y-6 px-4 py-6">
-        <p className="text-sm text-foreground">Quran Daily keeps only what it needs to track your reading.</p>
+      <main className="mx-auto max-w-lg space-y-6 px-5 pb-12 pt-4">
+        <p className="text-body text-foreground">Quran Daily keeps only what it needs to track your reading.</p>
 
         <Section title="What we store">
           <ul className="list-disc space-y-1 pl-5">

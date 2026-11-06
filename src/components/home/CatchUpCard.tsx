@@ -12,13 +12,13 @@ interface CatchUpCardProps {
 
 /** Calm nudge when the reader is behind schedule. Never red, never guilt. */
 const CatchUpCard = ({ pagesBehind, dailyTarget, endDate, onLog, onDismiss }: CatchUpCardProps) => (
-  <div className="relative flex items-start gap-3 rounded-lg border border-primary bg-primary/10 p-4">
+  <div className="relative flex items-start gap-3 rounded-2xl bg-accent-soft p-5">
     <TrendingUp className="h-5 w-5 shrink-0 text-primary" aria-hidden />
     <div className="flex min-w-0 flex-1 flex-col items-start gap-2 pr-6">
-      <p className="text-sm font-semibold text-foreground">
+      <p className="text-body font-semibold text-foreground">
         Welcome back. You're {pagesBehind} {pagesBehind === 1 ? "page" : "pages"} behind.
       </p>
-      <p className="text-xs text-foreground">
+      <p className="text-small text-foreground">
         No pressure: {dailyTarget} {dailyTarget === 1 ? "page" : "pages"} a day still gets you there by{" "}
         {format(endDate, "d MMM")}.
       </p>

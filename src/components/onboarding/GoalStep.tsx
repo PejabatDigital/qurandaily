@@ -57,7 +57,7 @@ const GoalStep = ({ draft, plan, update, onBack, onNext }: StepProps) => (
           </div>
         </div>
         {plan.rangeError && (
-          <p role="alert" className="text-xs text-destructive">{plan.rangeError}</p>
+          <p role="alert" className="text-small text-destructive">{plan.rangeError}</p>
         )}
       </div>
     )}

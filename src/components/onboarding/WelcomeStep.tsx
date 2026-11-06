@@ -15,7 +15,7 @@ const WelcomeStep = ({ onNext }: { onNext: () => void }) => (
         <Button size="lg" className="w-full" onClick={onNext}>
           Get started
         </Button>
-        <p className="text-xs font-medium text-muted-foreground opacity-70">{"{ kasah kod }"}</p>
+        <p className="text-caption font-medium text-muted-foreground opacity-70">{"{ kasah kod }"}</p>
       </>
     }
   >
@@ -23,13 +23,13 @@ const WelcomeStep = ({ onNext }: { onNext: () => void }) => (
       <p lang="ar" dir="rtl" className="w-full font-arabic text-[28px] leading-[48px]">
         وَرَتِّلِ ٱلْقُرْءَانَ تَرْتِيلًا
       </p>
-      <p className="w-full text-sm">"And recite the Quran with measured recitation."</p>
-      <p className="w-full text-xs opacity-75">Al-Muzzammil 73:4</p>
+      <p className="w-full text-body">"And recite the Quran with measured recitation."</p>
+      <p className="w-full text-small opacity-75">Al-Muzzammil 73:4</p>
     </div>
 
     <div className="w-full space-y-2">
       <ScreenTitle>Read a little, every day</ScreenTitle>
-      <p className="text-sm text-muted-foreground">
+      <p className="text-body text-muted-foreground">
         Set a reading plan, log your pages after each prayer, and watch your khatam come together.
       </p>
     </div>
@@ -37,10 +37,10 @@ const WelcomeStep = ({ onNext }: { onNext: () => void }) => (
     <ul className="w-full space-y-3">
       {BENEFITS.map(({ icon: Icon, text }) => (
         <li key={text} className="flex items-center gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft">
             <Icon className="h-[18px] w-[18px] text-primary" aria-hidden />
           </span>
-          <span className="text-sm font-medium text-foreground">{text}</span>
+          <span className="text-body font-medium text-foreground">{text}</span>
         </li>
       ))}
     </ul>
