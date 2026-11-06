@@ -2,7 +2,8 @@ import type { Config } from "tailwindcss";
 import tailwindcssAnimate from "tailwindcss-animate";
 
 export default {
-  darkMode: ["class"],
+  // Dark colours come from the CSS tokens (src/index.css), following the device or
+  // Appearance, so components don't use dark: variants.
   content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
   prefix: "",
   theme: {
@@ -14,7 +15,19 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['"Instrument Sans"', "-apple-system", "BlinkMacSystemFont", '"Segoe UI"', "Roboto", "sans-serif"],
+        // Instrument Sans has no Arabic letters: the device's own Arabic font.
+        arabic: ['"SF Arabic"', '"Geeza Pro"', '"Noto Naskh Arabic"', "serif"],
+      },
+      // Clear day uses 400, 500 and 600 only; "bold" is 600.
+      fontWeight: { bold: "600" },
+      boxShadow: { float: "var(--shadow)" },
       colors: {
+        subtle: "hsl(var(--subtle))",
+        faint: "hsl(var(--faint))",
+        "accent-soft": "hsl(var(--accent-soft))",
+        "danger-soft": "hsl(var(--danger-soft))",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

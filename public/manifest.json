@@ -3,8 +3,8 @@
   "short_name": "Quran Daily",
   "start_url": "/",
   "display": "standalone",
-  "theme_color": "#3A785F",
-  "background_color": "#FAF8F5",
+  "theme_color": "#F6F7F9",
+  "background_color": "#F6F7F9",
   "icons": [
     {
       "src": "/icon-192.png",

@@ -58,7 +58,7 @@ const CalendarPage = () => {
           </Button>
           <div className="text-center">
             <p className="text-base font-semibold text-foreground">{MONTHS_EN[m]} {year}</p>
-            <p className="text-xs text-primary" style={{ fontFamily: "Amiri, serif" }}>
+            <p className="text-xs text-primary">
               {takwim ? hijriRangeLabel(takwim, m) : "\u00a0"}
             </p>
           </div>

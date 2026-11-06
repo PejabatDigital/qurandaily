@@ -71,7 +71,7 @@ const TodayCard = () => {
             <div className="space-y-0.5">
               <p className="text-sm font-semibold text-foreground">{gregLine}</p>
               {hijriLine && (
-                <p className="text-sm text-primary" style={{ fontFamily: "Amiri, serif" }}>
+                <p className="text-sm text-primary">
                   {hijriLine}
                 </p>
               )}

@@ -35,7 +35,7 @@ const KhatamCelebration = ({ completion, onStartNext, onHome }: KhatamCelebratio
       <div className="mx-auto flex min-h-[100dvh] max-w-lg flex-col">
         <main className="flex flex-1 flex-col items-center gap-6 px-4 pt-14">
           <div className="flex w-full flex-col items-center gap-3 rounded-2xl bg-primary px-6 py-8 text-center text-primary-foreground">
-            <p lang="ar" dir="rtl" className="w-full text-[28px] leading-[48px]" style={{ fontFamily: "Amiri, serif" }}>
+            <p lang="ar" dir="rtl" className="w-full font-arabic text-[28px] leading-[48px]">
               ٱلْحَمْدُ لِلَّهِ
             </p>
             <h1 ref={headingRef} tabIndex={-1} className="w-full text-[26px] font-bold leading-8 tracking-[-0.5px] outline-none">

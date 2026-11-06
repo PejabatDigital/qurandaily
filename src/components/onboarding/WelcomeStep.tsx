@@ -20,7 +20,7 @@ const WelcomeStep = ({ onNext }: { onNext: () => void }) => (
     }
   >
     <div className="flex w-full flex-col items-center gap-3 rounded-2xl bg-primary px-6 py-8 text-center text-primary-foreground">
-      <p lang="ar" dir="rtl" className="w-full text-[28px] leading-[48px]" style={{ fontFamily: "Amiri, serif" }}>
+      <p lang="ar" dir="rtl" className="w-full font-arabic text-[28px] leading-[48px]">
         وَرَتِّلِ ٱلْقُرْءَانَ تَرْتِيلًا
       </p>
       <p className="w-full text-sm">"And recite the Quran with measured recitation."</p>

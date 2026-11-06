@@ -1,0 +1,10 @@
+# Security headers for every page and file (Cloudflare static assets), as WalletKu.
+# Only Quran Daily's own files may load; the browser may also ask api.waktusolat.app for
+# prayer times. The app can't be shown inside another site.
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://api.waktusolat.app; font-src 'self'; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: same-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+  Strict-Transport-Security: max-age=31536000

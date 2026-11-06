@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { api, auth, setSignedOutHandler, type SessionUser } from "@/lib/api";
+import { APPEARANCE_KEY } from "@/lib/appearance";
 
 interface AuthContextType {
   user: SessionUser | null;
@@ -28,10 +29,12 @@ const AuthContext = createContext<AuthContextType>({
 
 export const useAuth = () => useContext(AuthContext);
 
-/** Removes what this device remembers for the app (e.g. catch-up dismissals). */
+/** Removes what this device remembers for the app (e.g. catch-up dismissals), apart from
+ *  Appearance, which belongs to the device rather than the account. */
 function forgetDevice() {
   try {
-    for (const key of Object.keys(localStorage)) if (key.startsWith("qd:")) localStorage.removeItem(key);
+    for (const key of Object.keys(localStorage))
+      if (key.startsWith("qd:") && key !== APPEARANCE_KEY) localStorage.removeItem(key);
   } catch {
     // Storage unavailable: nothing to clear.
   }

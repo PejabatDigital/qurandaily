@@ -1,70 +1,114 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Amiri:wght@400;700&display=swap');
+/* MyDay's "Clear day" look (see CLAUDE.md). Instrument Sans is served from public/fonts/,
+   so no requests go to Google. */
+@font-face {
+  font-family: "Instrument Sans";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url(/fonts/instrument-sans-latin-ext.woff2) format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Instrument Sans";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url(/fonts/instrument-sans-latin.woff2) format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Colours as HSL channels (shadcn's names, Clear day's values in the comments). Light by
+   default; dark follows the device unless Appearance (public/theme.js) picks one. */
 @layer base {
   :root {
-    --background: 40 30% 97%;
-    --foreground: 150 20% 15%;
-
-    --card: 40 25% 99%;
-    --card-foreground: 150 20% 15%;
-
-    --popover: 40 25% 99%;
-    --popover-foreground: 150 20% 15%;
-
-    --primary: 155 35% 35%;
-    --primary-foreground: 40 30% 97%;
-
-    --secondary: 150 15% 92%;
-    --secondary-foreground: 150 20% 20%;
-
-    --muted: 150 10% 93%;
-    --muted-foreground: 147 11% 40%;
-
-    --accent: 150 15% 92%;
-    --accent-foreground: 150 20% 20%;
-
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 40 30% 97%;
-
-    --border: 150 12% 88%;
-    --input: 150 12% 88%;
-    --ring: 155 35% 35%;
-
+    --background: 220 20% 97.1%;        /* bg #F6F7F9 */
+    --foreground: 225.8 59.1% 18.2%;    /* text #13204A */
+    --card: 0 0% 100%;                  /* surface #FFFFFF */
+    --card-foreground: 225.8 59.1% 18.2%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 225.8 59.1% 18.2%;
+    --primary: 227.1 100% 59%;          /* accent #2E5BFF */
+    --primary-foreground: 0 0% 100%;    /* on-accent #FFFFFF */
+    --secondary: 217.5 30.8% 94.9%;     /* subtle #EEF1F6 */
+    --secondary-foreground: 225.8 59.1% 18.2%;
+    --muted: 217.5 30.8% 94.9%;
+    --muted-foreground: 224 12.3% 47.8%; /* text-muted #6B7389 */
+    --accent: 217.5 30.8% 94.9%;        /* shadcn's hover fill = subtle */
+    --accent-foreground: 225.8 59.1% 18.2%;
+    --destructive: 358.1 75.1% 59%;     /* danger #E5484D */
+    --destructive-foreground: 0 0% 100%;
+    --border: 222 22.7% 91.4%;          /* line #E4E7EE */
+    --input: 222 22.7% 91.4%;
+    --ring: 227.1 100% 59%;
+    --subtle: 217.5 30.8% 94.9%;        /* #EEF1F6 */
+    --accent-soft: 224.3 100% 95.5%;    /* #E8EEFF */
+    --danger-soft: 0 81% 95.9%;         /* #FDECEC */
+    --faint: 222.5 13.5% 65.1%;         /* text-subtle #9AA1B2 */
+    --shadow: 0 1px 2px rgba(19, 32, 74, 0.04), 0 12px 32px rgba(19, 32, 74, 0.08);
     --radius: 0.75rem;
+    color-scheme: light;
   }
 
-  .dark {
-    --background: 150 15% 8%;
-    --foreground: 40 20% 92%;
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --background: 225.7 48.8% 8.4%;     /* #0B1020 */
+      --foreground: 225 37.5% 93.7%;      /* #E9ECF5 */
+      --card: 224.4 41.5% 12.7%;          /* #131A2E */
+      --card-foreground: 225 37.5% 93.7%;
+      --popover: 224.4 41.5% 12.7%;
+      --popover-foreground: 225 37.5% 93.7%;
+      --primary: 228.2 100% 74.1%;        /* #7B95FF */
+      --primary-foreground: 225.7 48.8% 8.4%;
+      --secondary: 224 36.6% 16.1%;       /* #1A2238 */
+      --secondary-foreground: 225 37.5% 93.7%;
+      --muted: 224 36.6% 16.1%;
+      --muted-foreground: 223.6 16.4% 60.6%; /* #8A93AB */
+      --accent: 224 36.6% 16.1%;
+      --accent-foreground: 225 37.5% 93.7%;
+      --destructive: 358.6 100% 73.9%;    /* #FF7A7D */
+      --destructive-foreground: 225.7 48.8% 8.4%;
+      --border: 224.1 33.3% 20%;          /* #222B44 */
+      --input: 224.1 33.3% 20%;
+      --ring: 228.2 100% 74.1%;
+      --subtle: 224 36.6% 16.1%;
+      --accent-soft: 227.8 50.9% 20.8%;   /* #1A2550 */
+      --danger-soft: 348.8 38.1% 16.5%;   /* #3A1A20 */
+      --faint: 224.6 15.8% 43.3%;         /* #5D6680 */
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px rgba(0, 0, 0, 0.35);
+      color-scheme: dark;
+    }
+  }
 
-    --card: 150 15% 10%;
-    --card-foreground: 40 20% 92%;
-
-    --popover: 150 15% 10%;
-    --popover-foreground: 40 20% 92%;
-
-    --primary: 155 40% 45%;
-    --primary-foreground: 150 15% 8%;
-
-    --secondary: 150 12% 16%;
-    --secondary-foreground: 40 20% 90%;
-
-    --muted: 150 12% 16%;
-    --muted-foreground: 150 8% 55%;
-
-    --accent: 150 12% 16%;
-    --accent-foreground: 40 20% 90%;
-
-    --destructive: 1 83% 63%;
-    --destructive-foreground: 150 15% 8%;
-
-    --border: 150 12% 18%;
-    --input: 150 12% 18%;
-    --ring: 155 40% 45%;
+  :root[data-theme="dark"] {
+    --background: 225.7 48.8% 8.4%;     /* #0B1020 */
+    --foreground: 225 37.5% 93.7%;      /* #E9ECF5 */
+    --card: 224.4 41.5% 12.7%;          /* #131A2E */
+    --card-foreground: 225 37.5% 93.7%;
+    --popover: 224.4 41.5% 12.7%;
+    --popover-foreground: 225 37.5% 93.7%;
+    --primary: 228.2 100% 74.1%;        /* #7B95FF */
+    --primary-foreground: 225.7 48.8% 8.4%;
+    --secondary: 224 36.6% 16.1%;       /* #1A2238 */
+    --secondary-foreground: 225 37.5% 93.7%;
+    --muted: 224 36.6% 16.1%;
+    --muted-foreground: 223.6 16.4% 60.6%; /* #8A93AB */
+    --accent: 224 36.6% 16.1%;
+    --accent-foreground: 225 37.5% 93.7%;
+    --destructive: 358.6 100% 73.9%;    /* #FF7A7D */
+    --destructive-foreground: 225.7 48.8% 8.4%;
+    --border: 224.1 33.3% 20%;          /* #222B44 */
+    --input: 224.1 33.3% 20%;
+    --ring: 228.2 100% 74.1%;
+    --subtle: 224 36.6% 16.1%;
+    --accent-soft: 227.8 50.9% 20.8%;   /* #1A2550 */
+    --danger-soft: 348.8 38.1% 16.5%;   /* #3A1A20 */
+    --faint: 224.6 15.8% 43.3%;         /* #5D6680 */
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px rgba(0, 0, 0, 0.35);
+    color-scheme: dark;
   }
 }
 
@@ -75,6 +119,7 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'IBM Plex Sans', sans-serif;
+    font-family: "Instrument Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
 }

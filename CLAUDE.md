@@ -96,49 +96,77 @@ Hijri date and prayer times for Malaysia (Takwim). A Kasah Kod app, live at
 7. ✅ Family review against MyDay, WalletKu and KlienKu; `npm audit fix` (6 Nov 2026).
 
 ## Next steps
-From the 6 Nov 2026 review, to bring QD in line with the other Kasah Kod apps. In this
-order, one at a time, each confirmed by Amin:
+From the 6 Nov 2026 review, to bring QD in line with the other Kasah Kod apps.
 
-- **A. Security headers and own fonts.** Serve IBM Plex Sans and Amiri from the app
-  (`public/fonts/`) instead of Google Fonts, then add `public/_headers` like WalletKu's.
-  QD's Content-Security-Policy also needs `connect-src` to allow api.waktusolat.app.
-- **B. Automatic deploys.** Cloudflare Workers Builds deploys when `main` changes; add the
-  custom domain (`routes`) and `build.command` to `wrangler.jsonc`, as WalletKu and
-  KlienKu do. Amin connects the repo in Cloudflare.
-- **C. Our own chart.** Draw the reading graph without a chart library (WalletKu draws its
-  own). Recharts is about 100 KB of the 160 KB the app downloads on every open. Looks the
-  same; Amin approves screenshots first.
-- **D. Opens offline.** A service worker so the Home Screen app opens without signal and
-  shows what this device last loaded, with an "Offline" note (as WalletKu).
-- **Maybe later (Amin to decide):** Appearance (System / Light / Dark, per device; the dark
-  colours already exist), Download my data (CSV), and D1 Time Travel restore steps in the
-  README.
+**Decided 6 Nov 2026: QD moves to MyDay's "Clear day" look, exactly** (navy and blue,
+Instrument Sans, same tokens, spacing, radii and light/dark, as WalletKu did), not QD's
+green. **Restyle only:** same screens and behaviour; React, the logic and the tests stay.
+Built from MyDay's Figma components (no new QD Figma screens first); Amin sees
+screenshots along the way. **Goes live all at once** when every part is done (deploys are
+still by hand, so `main` can hold unfinished work; don't deploy until Amin says so).
 
-## Design
-Figma file key `wTpm2pUiQgFeVAOj7DxXAH` (Foundations, Components, and the welcome and
-set-up screens). Read it with the Figma MCP server when connected; otherwise use the values below.
+- ✅ **R1. Foundations** (built 6 Nov 2026; Amin to look). Clear day colours (light and
+  dark), Instrument Sans served from `public/fonts/` (no Google Fonts), Appearance
+  (System / Light / Dark, per device, as MyDay), and `public/_headers` like WalletKu's,
+  with `connect-src` also allowing api.waktusolat.app.
+- **R2. Shared pieces** (`src/components/ui/` and friends): buttons fully round, 48px
+  fields, cards and lists with 16px corners and no borders, 24px sheets, toasts, tabs as
+  a segmented control.
+- **R3. Each screen:** sign-in, set-up, home, logging, history, plans, calendar, profile.
+- **R4. Our own chart.** Draw the reading graph without a chart library, in Clear day
+  colours (as WalletKu). Recharts is about 100 KB of the 160 KB the app downloads on every
+  open.
+- **R5. New app icon** in Clear day colours (needs Amin's design; the green ring stays
+  until then).
+- **R6. Amin checks it on his phone; then deploy.**
+- Afterwards: **automatic deploys** (Workers Builds; add `routes` and `build.command` to
+  `wrangler.jsonc`, Amin connects the repo in Cloudflare), then **opens offline** (service
+  worker showing what this device last loaded, as WalletKu).
+- **Maybe later (Amin to decide):** Download my data (CSV), D1 Time Travel restore steps in
+  the README.
 
-**Direction:** calm and minimal. Deep green on warm cream. Sentence case. QD keeps its
-own look; it is not MyDay's "Clear day".
+## Design — Clear day (as MyDay and WalletKu)
+**Source of truth:** MyDay's Figma "MyDay — App Design"
+https://www.figma.com/design/7HHfGaTye4sIoSabAMCsxT (Components page) and the token table
+in `../../MyDay/MDsite/CLAUDE.md`. QD's own older Figma file (key `wTpm2pUiQgFeVAOj7DxXAH`)
+holds the green look's welcome and set-up screens; use it for layout only.
 
-### Tokens (HSL in `src/index.css`, used through Tailwind)
-| Token | Light | Dark | Use |
+**Direction:** modern and minimal. Navy and blue on a cool off-white; one typeface;
+sentence case. Spacing 4/8/12/16/20/24/32/48, radius 12 (fields) / 16 (cards, lists) /
+24 (sheets) / full (buttons), shadow only on floating things.
+
+### Tokens (HSL channels in `src/index.css`, used through Tailwind)
+QD keeps shadcn's token names so the components work unchanged; the values are Clear day's.
+| QD token (Tailwind) | Clear day | Light | Dark |
 | --- | --- | --- | --- |
-| `--background` | #FAF8F5 | #111714 | app background |
-| `--card` | #FDFDFC | #161D1A | cards, sheets |
-| `--foreground` | #1F2E26 | #EFECE7 | primary text |
-| `--primary` | #3A785E | #45A17A | progress ring, primary actions |
-| `--secondary` / `--muted` | #E8EEEB | #242E29 | chips, subtle fills |
-| `--muted-foreground` | #5B7165 | #83958C | secondary and helper text |
-| `--destructive` | #DC2828 | #EF5552 | errors, delete |
-| `--border` | #DDE4E0 | #28332E | hairlines, inputs |
+| `--background` (`bg-background`) | `--bg` | #F6F7F9 | #0B1020 |
+| `--card`, `--popover` | `--surface` | #FFFFFF | #131A2E |
+| `--secondary`, `--muted`, `--accent`, `--subtle` | `--subtle` | #EEF1F6 | #1A2238 |
+| `--accent-soft` (`bg-accent-soft`) | `--accent-soft` | #E8EEFF | #1A2550 |
+| `--danger-soft` (`bg-danger-soft`) | `--danger-soft` | #FDECEC | #3A1A20 |
+| `--foreground` | `--text` | #13204A | #E9ECF5 |
+| `--muted-foreground` | `--text-muted` | #6B7389 | #8A93AB |
+| `--faint` (`text-faint`) | `--text-subtle` | #9AA1B2 | #5D6680 |
+| `--border`, `--input` | `--line` | #E4E7EE | #222B44 |
+| `--primary`, `--ring` | `--accent` | #2E5BFF | #7B95FF |
+| `--destructive` | `--danger` | #E5484D | #FF7A7D |
+| `--primary-foreground` | `--on-accent` | #FFFFFF | #0B1020 |
+| `--shadow` (`shadow-float`) | shadow | Add Bar, toasts | |
 
-Radius `--radius` 0.75rem. Dark colours are defined (`.dark`) but nothing switches them on
-yet. Theme colour #3A785F, splash background #FAF8F5.
+(shadcn's `--accent` is its hover fill, so it's `--subtle`; Clear day's accent blue is
+`--primary`.) Dark follows the device, or Appearance in Profile (`qd:theme`, per device,
+kept on sign-out; `public/theme.js` applies it before the page draws). Don't use Tailwind
+`dark:` variants: the tokens switch.
 
-**Type:** IBM Plex Sans (400–700) for everything; Amiri for Arabic text.
+**Type:** Instrument Sans (400, 500, 600; `font-bold` is 600), served from `public/fonts/`.
+Arabic text (`font-arabic`) uses the device's own Arabic font, because Instrument Sans has
+none.
 
-**App icon:** a flat green ring, most of the way round, around an open book on cream.
+**Security headers:** `public/_headers` (as WalletKu). Nothing loads from other sites
+except prayer times from api.waktusolat.app (`connect-src`). Adding any other outside
+address needs a change there.
+
+**App icon (green, until R5):** a flat green ring, most of the way round, around an open book on cream.
 `public/icon.svg` is the master; the PNGs and favicon are made from it with no
 transparency. Don't redraw it in code. Share image `public/og-image.jpg`: 1200×630, under
 100 KB (so WhatsApp shows it); bump `?v=` in `index.html` when it changes.

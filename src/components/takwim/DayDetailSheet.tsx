@@ -44,7 +44,7 @@ export function DayDetailSheet({ selected, onOpenChange, highlightPrayer }: DayD
                 <SheetTitle className="text-5xl font-bold leading-none tracking-tight">
                   {detail.gregDay}
                 </SheetTitle>
-                <span className="text-base text-primary" style={{ fontFamily: "Amiri, serif" }}>
+                <span className="text-base text-primary">
                   {detail.hDay} {HIJRI_MONTHS[detail.hMonth]} {detail.hYear} H
                 </span>
               </div>

@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import DeleteAccountDialog from "@/components/DeleteAccountDialog";
+import SegmentedControl from "@/components/SegmentedControl";
+import { type Appearance, getAppearance, setAppearance } from "@/lib/appearance";
 import { ArrowLeft, User } from "lucide-react";
 
 const Profile = () => {
@@ -19,6 +21,12 @@ const Profile = () => {
   const [displayName, setDisplayName] = useState("");
   const [signingOut, setSigningOut] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [appearance, setAppearanceState] = useState<Appearance>(getAppearance);
+
+  const chooseAppearance = (t: Appearance) => {
+    setAppearance(t);
+    setAppearanceState(t);
+  };
 
   useEffect(() => {
     if (profile?.display_name) setDisplayName(profile.display_name);
@@ -89,6 +97,21 @@ const Profile = () => {
             </form>
           </CardContent>
         </Card>
+
+        <section className="space-y-2">
+          <h2 className="px-1 text-sm font-semibold text-foreground">Appearance</h2>
+          <SegmentedControl
+            label="Appearance"
+            value={appearance}
+            onChange={chooseAppearance}
+            options={[
+              { value: "system", label: "System" },
+              { value: "light", label: "Light" },
+              { value: "dark", label: "Dark" },
+            ]}
+          />
+          <p className="px-1 text-xs text-muted-foreground">Saved on this device.</p>
+        </section>
 
         <section className="space-y-2">
           <h2 className="px-1 text-sm font-semibold text-foreground">Account</h2>
