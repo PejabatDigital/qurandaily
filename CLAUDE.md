@@ -131,7 +131,7 @@ still by hand, so `main` can hold unfinished work; don't deploy until Amin says 
 - ✅ **R5. New app icon** (built 7 Nov 2026; Amin picked "A · Ring" from three drafts):
   the same ring and book, now a blue ring around a navy book on white. Share image
   updated (`?v=3`).
-- **R6. Amin checks it on his phone; then deploy.**
+- ✅ **R6. Deployed** (7 Nov 2026, at Amin's go-ahead); Amin to check it on his phone.
 - Afterwards: **automatic deploys** (Workers Builds; add `routes` and `build.command` to
   `wrangler.jsonc`, Amin connects the repo in Cloudflare), then **opens offline** (service
   worker showing what this device last loaded, as WalletKu).
@@ -177,7 +177,9 @@ none.
 
 **Security headers:** `public/_headers` (as WalletKu). Nothing loads from other sites
 except prayer times from api.waktusolat.app (`connect-src`). Adding any other outside
-address needs a change there.
+address needs a change there. Cloudflare Web Analytics was on for the site and its
+injected script (static.cloudflareinsights.com) is blocked by these headers; the Privacy
+page promises no analytics, so turn it off in Cloudflare rather than allowing it.
 
 **App icon:** a flat accent-blue (#2E5BFF) ring, most of the way round, around a navy
 (#13204A) open book on white. `public/icon.svg` is the master; `icon-512.png`,
