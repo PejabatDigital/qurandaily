@@ -128,8 +128,9 @@ still by hand, so `main` can hold unfinished work; don't deploy until Amin says 
   colours: accent line, hairline grid. 7D shows a dot and the pages on each day; 30D and
   All show a day's pages when you touch it; the line above the chart says the total.
   Recharts is removed: the main app file went from 162 KB to 50 KB (compressed).
-- **R5. New app icon** in Clear day colours (needs Amin's design; the green ring stays
-  until then).
+- ✅ **R5. New app icon** (built 7 Nov 2026; Amin picked "A · Ring" from three drafts):
+  the same ring and book, now a blue ring around a navy book on white. Share image
+  updated (`?v=3`).
 - **R6. Amin checks it on his phone; then deploy.**
 - Afterwards: **automatic deploys** (Workers Builds; add `routes` and `build.command` to
   `wrangler.jsonc`, Amin connects the repo in Cloudflare), then **opens offline** (service
@@ -178,9 +179,11 @@ none.
 except prayer times from api.waktusolat.app (`connect-src`). Adding any other outside
 address needs a change there.
 
-**App icon (green, until R5):** a flat green ring, most of the way round, around an open book on cream.
-`public/icon.svg` is the master; the PNGs and favicon are made from it with no
-transparency. Don't redraw it in code. Share image `public/og-image.jpg`: 1200×630, under
+**App icon:** a flat accent-blue (#2E5BFF) ring, most of the way round, around a navy
+(#13204A) open book on white. `public/icon.svg` is the master; `icon-512.png`,
+`icon-192.png` (also used as maskable: the ring sits inside the safe zone),
+`apple-touch-icon.png` (180) and `favicon.ico` (16/32/48) are made from it with macOS
+Quick Look + sips/Pillow, with no transparency. Don't redraw it in code. Share image `public/og-image.jpg`: 1200×630, under
 100 KB (so WhatsApp shows it); bump `?v=` in `index.html` when it changes.
 
 ## Data
