@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 const Settings = lazy(() => import("./pages/Settings"));
 const Campaigns = lazy(() => import("./pages/Campaigns"));
 const History = lazy(() => import("./pages/History"));
+const Progress = lazy(() => import("./pages/Progress"));
 const Calendar = lazy(() => import("./pages/Calendar"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const SignIn = lazy(() => import("./pages/SignIn"));
@@ -52,8 +53,7 @@ const App = () => (
               <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/profile" element={<Navigate to="/settings" replace />} />
-              {/* Until Progress is built (M3), its tab shows the reading history. */}
-              <Route path="/progress" element={<ProtectedRoute><History tab /></ProtectedRoute>} />
+              <Route path="/progress" element={<ProtectedRoute><Progress /></ProtectedRoute>} />
               <Route path="/campaigns" element={<ProtectedRoute><Campaigns /></ProtectedRoute>} />
               <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
               <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />

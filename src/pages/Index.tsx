@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
 import CircularProgress from "@/components/CircularProgress";
-import WeeklyChart from "@/components/WeeklyChart";
 import LogReadingDialog from "@/components/LogReadingDialog";
 import OnboardingFlow from "@/components/onboarding/OnboardingFlow";
 import CreateCampaignDialog from "@/components/CreateCampaignDialog";
@@ -20,7 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { BookOpen, Flame, Target, TrendingUp, RefreshCw } from "lucide-react";
 import { getSurahForPage, TOTAL_PAGES } from "@/lib/quran-data";
-import { format, subDays, isToday, parseISO, isPast, endOfDay } from "date-fns";
+import { format, parseISO, isPast, endOfDay } from "date-fns";
 import { toast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCampaigns } from "@/hooks/useCampaigns";
@@ -28,7 +27,7 @@ import { useReadingLogs } from "@/hooks/useReadingLogs";
 import { dueMilestones, markMilestonesShown, shownMilestones } from "@/lib/milestones";
 import { bestStreak, daysInclusive, displayPage, isKhatamPlan, pagesBehind, todayTarget } from "@/lib/plan";
 import { dismissCatchUp, isCatchUpDismissed } from "@/lib/catch-up";
-import { planActivity } from "@/lib/activity";
+import { planSummary } from "@/lib/progress";
 
 const Index = () => {
   const queryClient = useQueryClient();
@@ -86,9 +85,8 @@ const Index = () => {
     queryClient.invalidateQueries({ queryKey: ["campaigns"] });
   };
 
-  // Computed stats — derived from the full log history, so this only
-  // re-scans when the inputs actually change rather than on every render
-  // (menu toggles, refresh spinner, etc).
+  // Stats for the plan on show (lib/progress.ts, shared with Progress), plus Home's own:
+  // where the reader is, today's target and the catch-up gap.
   const {
     campaignLogs,
     pagesRead,
@@ -101,21 +99,15 @@ const Index = () => {
     totalPages,
     behind,
     streak,
-    activity,
   } = useMemo(() => {
-    const streakEndDate = campaignEndDate && isCampaignExpired ? campaignEndDate : new Date();
-    const campaignLogs = activeCampaign
-      ? logs.filter((l) => l.campaign_id === activeCampaign.id && (!campaignEndDate || parseISO(l.created_at) <= campaignEndDate))
-      : [];
-    const totalPages = activeCampaign ? activeCampaign.end_page - activeCampaign.start_page + 1 : TOTAL_PAGES;
-    const pagesRead = campaignLogs.reduce((sum, l) => sum + l.pages_read, 0);
-    const percentage = totalPages > 0 ? (pagesRead / totalPages) * 100 : 0;
-    const lastLog = campaignLogs[0];
-    const lastPageMarker = lastLog?.current_page_marker ?? activeCampaign?.start_page ?? 1;
-    const todayLogs = campaignLogs.filter((l) => isToday(parseISO(l.created_at)));
-    const pagesReadToday = todayLogs.reduce((sum, l) => sum + l.pages_read, 0);
-    const daysRemaining = activeCampaign ? daysInclusive(new Date(), parseISO(activeCampaign.end_date)) : 1;
-    const pagesRemaining = totalPages - pagesRead;
+    const now = new Date();
+    const summary = activeCampaign ? planSummary(activeCampaign, logs, now) : null;
+    const campaignLogs = summary?.logs ?? [];
+    const totalPages = summary?.totalPages ?? TOTAL_PAGES;
+    const pagesRead = summary?.pagesRead ?? 0;
+    const pagesReadToday = summary?.pagesReadToday ?? 0;
+    const lastPageMarker = campaignLogs[0]?.current_page_marker ?? activeCampaign?.start_page ?? 1;
+    const daysRemaining = activeCampaign ? daysInclusive(now, parseISO(activeCampaign.end_date)) : 1;
     const dailyTarget = isCampaignExpired ? 0 : todayTarget({ totalPages, pagesRead, pagesReadToday, daysRemaining });
     const behind = activeCampaign
       ? pagesBehind({
@@ -123,45 +115,23 @@ const Index = () => {
           pagesRead,
           startDate: parseISO(activeCampaign.start_date),
           endDate: parseISO(activeCampaign.end_date),
-          today: new Date(),
+          today: now,
         })
       : 0;
-
-    let streak = 0;
-    if (campaignLogs.length > 0) {
-      const logDays = new Set(campaignLogs.map((l) => format(parseISO(l.created_at), "yyyy-MM-dd")));
-      let checkDate = streakEndDate;
-      while (logDays.has(format(checkDate, "yyyy-MM-dd"))) {
-        streak++;
-        checkDate = subDays(checkDate, 1);
-      }
-    }
-
-    const activity = activeCampaign
-      ? planActivity({
-          startDate: parseISO(activeCampaign.start_date),
-          endDate: parseISO(activeCampaign.end_date),
-          today: new Date(),
-          finishedOn: pagesRead >= totalPages && campaignLogs[0] ? parseISO(campaignLogs[0].created_at) : null,
-          logs: campaignLogs,
-        })
-      : [];
-
     return {
       campaignLogs,
       pagesRead,
-      percentage,
+      percentage: summary?.percentage ?? 0,
       lastPageMarker,
       pagesReadToday,
       daysRemaining,
       dailyTarget,
-      pagesRemaining: Math.max(0, pagesRemaining),
+      pagesRemaining: Math.max(0, totalPages - pagesRead),
       totalPages,
       behind,
-      streak,
-      activity,
+      streak: summary?.streak ?? 0,
     };
-  }, [activeCampaign, logs, campaignEndDate, isCampaignExpired]);
+  }, [activeCampaign, logs, isCampaignExpired]);
 
   // Milestones, each shown once per reading plan (remembered on the account).
   // Reaching 100% gets the full-screen celebration instead of a toast.
@@ -428,7 +398,6 @@ const Index = () => {
               </Card>
             </div>
 
-            <WeeklyChart activity={activity} />
           </>
         )}
       </main>

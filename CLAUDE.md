@@ -151,12 +151,16 @@ one step at a time:
   today and the next six days, all six times, today's row tinted, the next prayer bold
   blue, Syuruk muted; a week into the next month fetches both months. `nextPrayer` and
   `weekAhead` in `lib/solat.ts` (tested), shared with Home's prayer card.
-- **M3. Progress**, three sections only: **pace** (pages ahead/behind, progress bar,
-  finish date at the average pace since the plan started); **calendar and streaks** (the
-  month as small rounded squares, **14 a row**, date in each, blue = read, today
-  outlined, ‹ › for earlier months; then days read this month, current streak, best
-  streak); the **Reading activity chart** (moved from Home). A "Reading history" link at
-  the bottom opens the existing page (edit/delete logs).
+- ✅ **M3. Progress** (built 7 Nov 2026; Amin to look), `pages/Progress.tsx`, three
+  sections only, for the active plan: **pace** (`progress/PaceCard.tsx`: behind only when
+  short of yesterday's even-schedule mark, ahead only past today's, otherwise "On track";
+  progress bar; finish date at the average pace since the plan started, both measured
+  from the earlier of the start date and the first reading); **calendar and streaks**
+  (`progress/ReadingCalendar.tsx`: the month as small rounded squares, **14 a row**, date
+  in each, blue = read, today outlined, ‹ › through the plan's months; days read this
+  month, current streak, best streak); the **Reading activity chart** (moved from Home).
+  A "Reading history" row at the end opens the history page (Back returns here). The
+  maths is in `lib/progress.ts` (tested); `planSummary` is shared with Home.
 - **Later:** reminders (needs the service worker, a Cloudflare cron and web push; ask
   before adding a library), then **badges** on Progress from the milestones.
 - Not chosen for now: juz map, all-time totals, reading-time-of-day, week vs week.

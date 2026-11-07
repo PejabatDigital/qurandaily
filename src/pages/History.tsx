@@ -5,8 +5,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import PageHeader from "@/components/PageHeader";
 import { useBack } from "@/hooks/useBack";
-import BottomBar from "@/components/BottomBar";
-import { BAR_SPACE } from "@/lib/nav";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,9 +18,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useCampaigns } from "@/hooks/useCampaigns";
 import { useReadingLogs } from "@/hooks/useReadingLogs";
 
-/** Every reading logged, with edit and delete. `tab`: opened from the bottom bar's
- *  Progress tab (until M3 builds Progress), so it has the bar and no Back. */
-const History = ({ tab = false }: { tab?: boolean }) => {
+/** Every reading logged, with edit and delete (opened from Progress). */
+const History = () => {
   const { toast } = useToast();
   const back = useBack("/progress");
   const queryClient = useQueryClient();
@@ -80,9 +77,9 @@ const History = ({ tab = false }: { tab?: boolean }) => {
 
   return (
     <div className="min-h-screen bg-background">
-      <PageHeader title="Reading history" onBack={tab ? undefined : back} />
+      <PageHeader title="Reading history" onBack={back} />
 
-      <main className={`mx-auto max-w-lg space-y-3 px-5 pt-4 ${tab ? BAR_SPACE : "pb-12"}`}>
+      <main className="mx-auto max-w-lg space-y-3 px-5 pb-12 pt-4">
         {logsLoading ? (
           Array.from({ length: 4 }).map((_, i) => (
             <Card key={i}>
@@ -163,7 +160,6 @@ const History = ({ tab = false }: { tab?: boolean }) => {
         title="Delete reading log"
         description="This removes this reading from your history. It can't be undone."
       />
-      {tab && <BottomBar current="progress" />}
     </div>
   );
 };
