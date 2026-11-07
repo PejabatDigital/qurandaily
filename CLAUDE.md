@@ -146,7 +146,11 @@ one step at a time:
   `useBack(fallback)`. Until M3, the Progress tab shows Reading history. Also fixed:
   `cn()` now knows QD's text sizes (`lib/utils.ts`), which tailwind-merge was dropping
   as colours whenever a colour class was also given.
-- **M2. Calendar** with this week's prayer times on top of the Takwim month.
+- ✅ **M2. Calendar** (built 7 Nov 2026; Amin to look): "Prayer times this week" on top
+  of the Takwim month, Amin's pick "A · Week timetable" (`takwim/WeekPrayerTimes.tsx`):
+  today and the next six days, all six times, today's row tinted, the next prayer bold
+  blue, Syuruk muted; a week into the next month fetches both months. `nextPrayer` and
+  `weekAhead` in `lib/solat.ts` (tested), shared with Home's prayer card.
 - **M3. Progress**, three sections only: **pace** (pages ahead/behind, progress bar,
   finish date at the average pace since the plan started); **calendar and streaks** (the
   month as small rounded squares, **14 a row**, date in each, blue = read, today

@@ -1,21 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useNow } from "@/hooks/useNow";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ZonePicker } from "@/components/takwim/ZonePicker";
 import { DayDetailSheet } from "@/components/takwim/DayDetailSheet";
 import { useSelectedZone, useSolatMonth } from "@/hooks/useSolat";
-import { PRAYER_LABELS, SolatUnavailableError, formatPrayerTime } from "@/lib/solat";
+import { SolatUnavailableError, formatPrayerTime, nextPrayer as findNextPrayer } from "@/lib/solat";
 import { getDayEntry, todayInTakwim } from "@/lib/takwim";
 import { HIJRI_MONTHS, MONTHS_EN, DAY_EN } from "@/data/takwim";
-
-function useNow(intervalMs = 30_000) {
-  const [now, setNow] = useState(() => new Date());
-  useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), intervalMs);
-    return () => clearInterval(id);
-  }, [intervalMs]);
-  return now;
-}
 
 function formatCountdown(ms: number): string {
   if (ms <= 0) return "now";
@@ -43,14 +35,8 @@ const TodayCard = () => {
   const nextPrayer = useMemo(() => {
     if (!prayer) return null;
     const nowSec = Math.floor(now.getTime() / 1000);
-    const ordered = PRAYER_LABELS.filter((p) => p.key !== "syuruk");
-    for (const { key, label } of ordered) {
-      const t = prayer[key];
-      if (t > nowSec) {
-        return { key, label, unix: t, msUntil: (t - nowSec) * 1000 };
-      }
-    }
-    return null;
+    const next = findNextPrayer(prayer, nowSec);
+    return next && { ...next, msUntil: (next.unix - nowSec) * 1000 };
   }, [prayer, now]);
 
   const todayEntry = today ? getDayEntry(today) : null;

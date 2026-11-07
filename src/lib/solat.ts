@@ -115,7 +115,7 @@ export function formatPrayerTime(unix: number): string {
   return TIME_FMT.format(new Date(unix * 1000));
 }
 
-export const PRAYER_LABELS: { key: keyof Omit<DayPrayer, "day" | "hijri">; label: string }[] = [
+export const PRAYER_LABELS: { key: PrayerKey; label: string }[] = [
   { key: "fajr", label: "Subuh" },
   { key: "syuruk", label: "Syuruk" },
   { key: "dhuhr", label: "Zohor" },
@@ -123,3 +123,22 @@ export const PRAYER_LABELS: { key: keyof Omit<DayPrayer, "day" | "hijri">; label
   { key: "maghrib", label: "Maghrib" },
   { key: "isha", label: "Isyak" },
 ];
+
+export type PrayerKey = keyof Omit<DayPrayer, "day" | "hijri">;
+
+/** The next prayer still to come on `prayer`'s day at `nowSec` (Syuruk isn't a prayer),
+ *  or null once Isyak has passed. */
+export function nextPrayer(prayer: DayPrayer, nowSec: number): { key: PrayerKey; label: string; unix: number } | null {
+  for (const { key, label } of PRAYER_LABELS) {
+    if (key !== "syuruk" && prayer[key] > nowSec) return { key, label, unix: prayer[key] };
+  }
+  return null;
+}
+
+/** Today and the `count - 1` days after it, as local dates (month 1-12). */
+export function weekAhead(today: Date, count = 7): { date: Date; year: number; month: number; day: number }[] {
+  return Array.from({ length: count }, (_, i) => {
+    const date = new Date(today.getFullYear(), today.getMonth(), today.getDate() + i);
+    return { date, year: date.getFullYear(), month: date.getMonth() + 1, day: date.getDate() };
+  });
+}

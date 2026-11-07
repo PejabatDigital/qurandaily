@@ -3,8 +3,9 @@ import { fetchSolatMonth, DEFAULT_ZONE, SolatUnavailableError } from "@/lib/sola
 import { toast } from "@/hooks/use-toast";
 import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
 
-export function useSolatMonth(zone: string, year: number, month: number) {
+export function useSolatMonth(zone: string, year: number, month: number, { enabled = true } = {}) {
   return useQuery({
+    enabled,
     queryKey: ["solat", zone, year, month],
     queryFn: () => fetchSolatMonth(zone, year, month),
     staleTime: 1000 * 60 * 60,

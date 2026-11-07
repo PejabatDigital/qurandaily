@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { CalendarGrid } from "@/components/takwim/CalendarGrid";
 import { ZonePicker } from "@/components/takwim/ZonePicker";
 import { DayDetailSheet } from "@/components/takwim/DayDetailSheet";
+import WeekPrayerTimes from "@/components/takwim/WeekPrayerTimes";
 import { MONTHS_EN } from "@/data/takwim";
 import {
   TAKWIM_YEARS, getTakwimYear, hijriRangeLabel, stepMonth,
@@ -37,7 +38,9 @@ const CalendarPage = () => {
       <PageHeader title="Calendar" right={<ZonePicker />} />
 
       <main className={`mx-auto max-w-lg space-y-4 px-5 pt-4 ${BAR_SPACE}`}>
-        <div className="flex items-center justify-between">
+        <WeekPrayerTimes />
+
+        <div className="flex items-center justify-between pt-2">
           <Button
             variant="ghost"
             size="icon"
