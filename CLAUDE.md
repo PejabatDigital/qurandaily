@@ -177,9 +177,10 @@ none.
 
 **Security headers:** `public/_headers` (as WalletKu). Nothing loads from other sites
 except prayer times from api.waktusolat.app (`connect-src`). Adding any other outside
-address needs a change there. Cloudflare Web Analytics was on for the site and its
-injected script (static.cloudflareinsights.com) is blocked by these headers; the Privacy
-page promises no analytics, so turn it off in Cloudflare rather than allowing it.
+address needs a change there. **Cloudflare Web Analytics stays on** (Amin, 7 Nov 2026:
+to see how many people use the app): Cloudflare adds its script to the page, so
+`script-src` allows static.cloudflareinsights.com and `connect-src` allows
+cloudflareinsights.com. It sets no cookies; the Privacy page says so.
 
 **App icon:** a flat accent-blue (#2E5BFF) ring, most of the way round, around a navy
 (#13204A) open book on white. `public/icon.svg` is the master; `icon-512.png`,

@@ -47,8 +47,9 @@ const Privacy = () => {
 
         <Section title="No tracking">
           <p>
-            No ads, no analytics, no tracking cookies. The only cookie keeps you signed in. To stop abuse of sign-in, we
-            keep the internet addresses that ask for codes for a short time, then delete them.
+            No ads and no tracking cookies. The only cookie keeps you signed in. We count visits with Cloudflare Web
+            Analytics, which uses no cookies and doesn't know who you are. To stop abuse of sign-in, we keep the internet
+            addresses that ask for codes for a short time, then delete them.
           </p>
         </Section>
 
