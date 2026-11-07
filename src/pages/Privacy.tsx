@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
 import PageHeader from "@/components/PageHeader";
+import { useBack } from "@/hooks/useBack";
 
 const Section = ({ title, children }: { title: string; children: ReactNode }) => (
   <section className="space-y-2">
@@ -11,11 +11,11 @@ const Section = ({ title, children }: { title: string; children: ReactNode }) =>
 
 /** Open to everyone (it's linked from the sign-in screen). */
 const Privacy = () => {
-  const navigate = useNavigate();
+  const back = useBack("/settings");
 
   return (
     <div className="min-h-screen bg-background">
-      <PageHeader title="Privacy" onBack={() => navigate("/")} />
+      <PageHeader title="Privacy" onBack={back} />
 
       <main className="mx-auto max-w-lg space-y-6 px-5 pb-12 pt-4">
         <p className="text-body text-foreground">Quran Daily keeps only what it needs to track your reading.</p>

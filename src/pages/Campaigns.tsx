@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
 import type { Campaign } from "@/lib/api-types";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import PageHeader from "@/components/PageHeader";
+import { useBack } from "@/hooks/useBack";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { format, parseISO } from "date-fns";
@@ -16,7 +16,7 @@ import { useCampaigns } from "@/hooks/useCampaigns";
 
 const Campaigns = () => {
   const { toast } = useToast();
-  const navigate = useNavigate();
+  const back = useBack("/settings");
   const queryClient = useQueryClient();
   const [editCampaign, setEditCampaign] = useState<Campaign | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -53,7 +53,7 @@ const Campaigns = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <PageHeader title="Reading plans" onBack={() => navigate("/")} />
+      <PageHeader title="Reading plans" onBack={back} />
 
       <main className="mx-auto max-w-lg px-5 pb-12 pt-4 space-y-3">
         {isLoading ? (

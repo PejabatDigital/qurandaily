@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
 import CircularProgress from "@/components/CircularProgress";
 import WeeklyChart from "@/components/WeeklyChart";
@@ -10,13 +11,14 @@ import CatchUpCard from "@/components/home/CatchUpCard";
 import PlanEndedCard from "@/components/home/PlanEndedCard";
 import FirstLogSheet, { type FirstLog } from "@/components/home/FirstLogSheet";
 import KhatamCelebration, { type Completion } from "@/components/home/KhatamCelebration";
-import AppMenu from "@/components/AppMenu";
+import BottomBar from "@/components/BottomBar";
+import { BAR_SPACE } from "@/lib/nav";
 import TodayCard from "@/components/TodayCard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, BookOpen, Flame, Target, Menu, TrendingUp, RefreshCw } from "lucide-react";
+import { BookOpen, Flame, Target, TrendingUp, RefreshCw } from "lucide-react";
 import { getSurahForPage, TOTAL_PAGES } from "@/lib/quran-data";
 import { format, subDays, isToday, parseISO, isPast, endOfDay } from "date-fns";
 import { toast } from "@/hooks/use-toast";
@@ -31,7 +33,6 @@ import { planActivity } from "@/lib/activity";
 const Index = () => {
   const queryClient = useQueryClient();
   const [logOpen, setLogOpen] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [newPlanOpen, setNewPlanOpen] = useState(false);
@@ -184,6 +185,28 @@ const Index = () => {
     }
   }, [streak, percentage, activeCampaign, isLoading, campaignLogs, totalPages]);
 
+  // The bar's Log button: an ended plan can't take new readings (they'd fall after its
+  // finish date), so say what to do instead.
+  const startLog = () => {
+    if (isCampaignExpired) {
+      toast({ title: "This reading plan has ended", description: "Extend the finish date or start a new plan to keep logging." });
+      return;
+    }
+    setLogOpen(true);
+  };
+
+  // The Log button on another tab opens Home with { log: true } (BottomBar's OPEN_LOG).
+  const location = useLocation();
+  const navigate = useNavigate();
+  const wantsLog = (location.state as { log?: boolean } | null)?.log === true;
+  useEffect(() => {
+    if (!wantsLog || isLoading) return;
+    navigate(".", { replace: true, state: null });
+    if (campaigns.length > 0) startLog();
+    // startLog only reads isCampaignExpired, which is settled once loading is done.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wantsLog, isLoading]);
+
   const handleLogged = (logged: { pagesRead: number; nextMarker: number }) => {
     // The very first log on a plan gets a celebration sheet instead of the
     // toast, unless it finishes the plan outright (that has its own screen).
@@ -290,12 +313,7 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-40 bg-background/95 pt-[env(safe-area-inset-top)] backdrop-blur">
         <div className="mx-auto flex max-w-lg items-center justify-between px-5 py-3">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" className="bg-card" onClick={() => setMenuOpen(true)} aria-label="Open menu">
-              <Menu className="h-5 w-5" />
-            </Button>
-            <h1 className="text-heading font-semibold">Quran Daily</h1>
-          </div>
+          <h1 className="text-heading font-semibold">Quran Daily</h1>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" className="bg-card" onClick={handleRefresh} disabled={isRefreshing} aria-label="Refresh">
               <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
@@ -316,13 +334,13 @@ const Index = () => {
         </div>
       </header>
 
-      <main className="mx-auto max-w-lg space-y-4 px-5 pb-32 pt-2">
+      <main className={`mx-auto max-w-lg space-y-4 px-5 pt-2 ${BAR_SPACE}`}>
         {showCatchUp && activeCampaign && (
           <CatchUpCard
             pagesBehind={behind}
             dailyTarget={dailyTarget}
             endDate={parseISO(activeCampaign.end_date)}
-            onLog={() => setLogOpen(true)}
+            onLog={startLog}
             onDismiss={() => {
               dismissCatchUp(activeCampaign.id);
               setCatchUpDismissedId(activeCampaign.id);
@@ -346,7 +364,7 @@ const Index = () => {
         <TodayCard />
 
         {showFirstLog && (
-          <TodayReadingCard pagesToday={pagesReadToday} dailyTarget={dailyTarget} onLog={() => setLogOpen(true)} />
+          <TodayReadingCard pagesToday={pagesReadToday} dailyTarget={dailyTarget} onLog={startLog} />
         )}
 
         {activeCampaign && (
@@ -415,18 +433,7 @@ const Index = () => {
         )}
       </main>
 
-      {activeCampaign && !isCampaignExpired && !showFirstLog && (
-        <button
-          onClick={() => setLogOpen(true)}
-          // Clear day Add Bar: a floating pill at the bottom.
-          className="fixed bottom-[max(24px,env(safe-area-inset-bottom))] left-1/2 z-50 flex h-14 w-[min(358px,calc(100%-32px))] -translate-x-1/2 items-center justify-center gap-2 rounded-full bg-primary text-heading font-medium text-primary-foreground shadow-float transition-transform active:scale-[0.98]"
-        >
-          <Plus className="h-5 w-5" aria-hidden />
-          Log reading
-        </button>
-      )}
-
-      <AppMenu open={menuOpen} onOpenChange={setMenuOpen} />
+      <BottomBar current="home" onLog={startLog} />
       <CreateCampaignDialog
         open={extendOpen}
         onOpenChange={setExtendOpen}

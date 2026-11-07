@@ -132,6 +132,31 @@ still by hand, so `main` can hold unfinished work; don't deploy until Amin says 
   the same ring and book, now a blue ring around a navy book on white. Share image
   updated (`?v=3`).
 - ✅ **R6. Deployed** (7 Nov 2026, at Amin's go-ahead); Amin to check it on his phone.
+
+**Decided 7 Nov 2026: a bottom bar replaces the ☰ side menu.** Five places:
+Home · Progress · **Log** (a raised round + in the middle, opens the log sheet from any
+tab; replaces the floating "Log reading" pill) · Calendar · Settings. Built in this order,
+one step at a time:
+- ✅ **M1. Bottom bar + Settings** (built 7 Nov 2026; Amin to look). `BottomBar.tsx`
+  (as WalletKu's tab bar, plus the raised round Log); Log on another tab opens Home with
+  `OPEN_LOG` state (`lib/nav.ts`), and on an ended plan it says so instead. Settings
+  (`/settings`; `/profile` redirects) is the catch-all: profile (name, email) as a card at
+  the top, reading plans, prayer zone, appearance, about, privacy, contact, version, sign
+  out, delete account. Profile is not a tab. Tab pages have no Back; sub-pages use
+  `useBack(fallback)`. Until M3, the Progress tab shows Reading history. Also fixed:
+  `cn()` now knows QD's text sizes (`lib/utils.ts`), which tailwind-merge was dropping
+  as colours whenever a colour class was also given.
+- **M2. Calendar** with this week's prayer times on top of the Takwim month.
+- **M3. Progress**, three sections only: **pace** (pages ahead/behind, progress bar,
+  finish date at the average pace since the plan started); **calendar and streaks** (the
+  month as small rounded squares, **14 a row**, date in each, blue = read, today
+  outlined, ‹ › for earlier months; then days read this month, current streak, best
+  streak); the **Reading activity chart** (moved from Home). A "Reading history" link at
+  the bottom opens the existing page (edit/delete logs).
+- **Later:** reminders (needs the service worker, a Cloudflare cron and web push; ask
+  before adding a library), then **badges** on Progress from the milestones.
+- Not chosen for now: juz map, all-time totals, reading-time-of-day, week vs week.
+
 - Afterwards: **automatic deploys** (Workers Builds; add `routes` and `build.command` to
   `wrangler.jsonc`, Amin connects the repo in Cloudflare), then **opens offline** (service
   worker showing what this device last loaded, as WalletKu).

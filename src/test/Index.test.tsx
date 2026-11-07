@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup, within, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { MemoryRouter } from "react-router-dom";
 import type { Campaign, ReadingLog } from "@/lib/api-types";
 
 const data = vi.hoisted(() => ({
@@ -28,10 +29,10 @@ vi.mock("@/hooks/useCampaigns", () => ({ useCampaigns: () => ({ data: data.campa
 vi.mock("@/hooks/useReadingLogs", () => ({ useReadingLogs: () => ({ data: data.logs, isLoading: false }) }));
 vi.mock("@/components/TodayCard", () => ({ default: () => null }));
 vi.mock("@/components/WeeklyChart", () => ({ default: () => null }));
-vi.mock("@/components/AppMenu", () => ({ default: () => null }));
 
 import Index from "@/pages/Index";
 import { Toaster } from "@/components/ui/toaster";
+import { OPEN_LOG } from "@/lib/nav";
 
 const plan = (patch: Partial<Campaign> = {}): Campaign => ({
   id: "plan-1",
@@ -57,18 +58,20 @@ const log = (pages: number, marker: number, createdAt: string): ReadingLog => ({
   created_at: createdAt,
 });
 
-function renderHome({ withToasts = false } = {}) {
+function renderHome({ withToasts = false, openLog = false } = {}) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
     <QueryClientProvider client={client}>
       {/* Before the page, as in App, so it's listening when the page shows a toast. */}
       {withToasts && <Toaster />}
-      <Index />
+      <MemoryRouter initialEntries={[{ pathname: "/", state: openLog ? OPEN_LOG : null }]}>
+        <Index />
+      </MemoryRouter>
     </QueryClientProvider>,
   );
 }
 
-// The floating + button (the catch-up card has a "Log reading" button too).
+// The bottom bar's round + (the catch-up card has a "Log reading" button too).
 const logButtons = () => screen.queryAllByRole("button", { name: "Log reading" });
 
 beforeEach(() => {
@@ -91,13 +94,13 @@ describe("Home", () => {
     expect(screen.getByText("Read a little, every day")).toBeInTheDocument();
   });
 
-  it("prompts for the first log and hides the floating button", () => {
+  it("prompts for the first log", () => {
     data.campaigns = [plan({ start_date: "2026-10-12", end_date: "2026-11-10" })];
     renderHome();
     expect(screen.getByText("Today's reading")).toBeInTheDocument();
     expect(screen.getByText("0 of 21 pages")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Log your first reading/ })).toBeInTheDocument();
-    expect(logButtons()).toHaveLength(0);
+    expect(logButtons()).toHaveLength(1); // the bar's
     expect(screen.getByText("Page 1, Al-Fatihah")).toBeInTheDocument();
     expect(screen.getByText("Full Quran (khatam) · ends 10 Nov · 30 days left")).toBeInTheDocument();
   });
@@ -111,7 +114,7 @@ describe("Home", () => {
     // 463 pages left over 19 days (12–30 Oct)
     expect(screen.getByText("No pressure: 25 pages a day still gets you there by 30 Oct.")).toBeInTheDocument();
     expect(screen.queryByText("Today's reading")).not.toBeInTheDocument();
-    expect(logButtons()).toHaveLength(2); // card button and floating button
+    expect(logButtons()).toHaveLength(2); // card button and the bar's
 
     fireEvent.click(screen.getByRole("button", { name: "Dismiss for today" }));
     expect(screen.queryByText(/pages behind/)).not.toBeInTheDocument();
@@ -137,7 +140,6 @@ describe("Home", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Full Quran (khatam) · ended 10 Oct")).toBeInTheDocument();
     expect(screen.getByText("–")).toBeInTheDocument();
-    expect(logButtons()).toHaveLength(0);
 
     fireEvent.click(screen.getByRole("button", { name: "Extend finish date" }));
     const dialog = screen.getByRole("dialog");
@@ -237,5 +239,26 @@ describe("Home", () => {
     expect(screen.getByText(/You read all 23 pages in 1 day\./)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Start a new plan" }));
     expect(screen.getByText("What would you like to read?")).toBeInTheDocument();
+  });
+
+  it("opens the log sheet from the bar, and when another tab sends the reader home to log", () => {
+    data.campaigns = [plan()];
+    data.logs = [log(230, 231, "2026-10-11T03:00:00Z")];
+    renderHome();
+    fireEvent.click(logButtons()[0]);
+    expect(screen.getByLabelText("How many pages did you read?")).toBeInTheDocument();
+    cleanup();
+
+    renderHome({ openLog: true });
+    expect(screen.getByLabelText("How many pages did you read?")).toBeInTheDocument();
+  });
+
+  it("explains instead of logging once the plan has ended", async () => {
+    data.campaigns = [plan({ start_date: "2026-09-12", end_date: "2026-10-10" })];
+    data.logs = [log(479, 480, "2026-10-09T03:00:00Z")];
+    renderHome({ withToasts: true });
+    fireEvent.click(logButtons()[0]);
+    expect(await screen.findByText("This reading plan has ended")).toBeInTheDocument();
+    expect(screen.queryByLabelText("How many pages did you read?")).not.toBeInTheDocument();
   });
 });

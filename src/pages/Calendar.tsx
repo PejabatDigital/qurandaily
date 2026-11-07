@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import PageHeader from "@/components/PageHeader";
+import BottomBar from "@/components/BottomBar";
+import { BAR_SPACE } from "@/lib/nav";
 import { Card, CardContent } from "@/components/ui/card";
 import { CalendarGrid } from "@/components/takwim/CalendarGrid";
 import { ZonePicker } from "@/components/takwim/ZonePicker";
@@ -14,7 +15,6 @@ import {
 } from "@/lib/takwim";
 
 const CalendarPage = () => {
-  const navigate = useNavigate();
   const [cursor, setCursor] = useState<MonthCursor>(() => {
     const now = new Date();
     return { year: now.getFullYear(), m: now.getMonth() };
@@ -34,9 +34,9 @@ const CalendarPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <PageHeader title="Calendar" onBack={() => navigate(-1)} right={<ZonePicker />} />
+      <PageHeader title="Calendar" right={<ZonePicker />} />
 
-      <main className="mx-auto max-w-lg space-y-4 px-5 pb-12 pt-4">
+      <main className={`mx-auto max-w-lg space-y-4 px-5 pt-4 ${BAR_SPACE}`}>
         <div className="flex items-center justify-between">
           <Button
             variant="ghost"
@@ -82,6 +82,7 @@ const CalendarPage = () => {
         </Card>
       </main>
 
+      <BottomBar current="calendar" />
       <DayDetailSheet
         selected={selected}
         onOpenChange={(open) => { if (!open) setSelected(null); }}

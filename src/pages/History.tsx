@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
 import type { ReadingLog } from "@/lib/api-types";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import PageHeader from "@/components/PageHeader";
+import { useBack } from "@/hooks/useBack";
+import BottomBar from "@/components/BottomBar";
+import { BAR_SPACE } from "@/lib/nav";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,9 +20,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useCampaigns } from "@/hooks/useCampaigns";
 import { useReadingLogs } from "@/hooks/useReadingLogs";
 
-const History = () => {
+/** Every reading logged, with edit and delete. `tab`: opened from the bottom bar's
+ *  Progress tab (until M3 builds Progress), so it has the bar and no Back. */
+const History = ({ tab = false }: { tab?: boolean }) => {
   const { toast } = useToast();
-  const navigate = useNavigate();
+  const back = useBack("/progress");
   const queryClient = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
   const [editLog, setEditLog] = useState<ReadingLog | null>(null);
@@ -76,9 +80,9 @@ const History = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <PageHeader title="Reading history" onBack={() => navigate("/")} />
+      <PageHeader title="Reading history" onBack={tab ? undefined : back} />
 
-      <main className="mx-auto max-w-lg px-5 pb-12 pt-4 space-y-3">
+      <main className={`mx-auto max-w-lg space-y-3 px-5 pt-4 ${tab ? BAR_SPACE : "pb-12"}`}>
         {logsLoading ? (
           Array.from({ length: 4 }).map((_, i) => (
             <Card key={i}>
@@ -159,6 +163,7 @@ const History = () => {
         title="Delete reading log"
         description="This removes this reading from your history. It can't be undone."
       />
+      {tab && <BottomBar current="progress" />}
     </div>
   );
 };
